@@ -1,0 +1,59 @@
+using Microsoft.AspNetCore.Authorization;
+
+namespace Karasu.ERP.Api.Authorization;
+
+public class PermissionRequirement : IAuthorizationRequirement
+{
+    public string Permission { get; }
+    public PermissionRequirement(string permission) => Permission = permission;
+}
+
+public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionRequirement>
+{
+    protected override Task HandleRequirementAsync(
+        AuthorizationHandlerContext context,
+        PermissionRequirement requirement)
+    {
+        if (context.User.IsInRole("CompanyOwner") || context.User.IsInRole("SuperAdmin"))
+        {
+            context.Succeed(requirement);
+            return Task.CompletedTask;
+        }
+
+        if (context.User.HasClaim("permission", requirement.Permission))
+            context.Succeed(requirement);
+
+        return Task.CompletedTask;
+    }
+}
+
+public static class Policies
+{
+    public const string RoleView = "Role.View";
+    public const string RoleCreate = "Role.Create";
+    public const string RoleUpdate = "Role.Update";
+    public const string AuditView = "Audit.View";
+
+    public const string ProductView = "Product.View";
+    public const string ProductCreate = "Product.Create";
+    public const string ProductUpdate = "Product.Update";
+    public const string ProductDelete = "Product.Delete";
+
+    public const string CustomerView = "Customer.View";
+    public const string CustomerCreate = "Customer.Create";
+    public const string CustomerUpdate = "Customer.Update";
+    public const string CustomerDelete = "Customer.Delete";
+
+    public const string OrderView = "Order.View";
+    public const string OrderCreate = "Order.Create";
+    public const string OrderConfirm = "Order.Confirm";
+    public const string OrderCancel = "Order.Cancel";
+
+    public const string StockView = "Stock.View";
+    public const string StockAdjust = "Stock.Adjust";
+
+    public const string PosSessionOpen = "Pos.Session.Open";
+    public const string PosSessionClose = "Pos.Session.Close";
+    public const string PosSessionView = "Pos.Session.View";
+    public const string PosSaleSell = "Pos.Sale.Sell";
+}

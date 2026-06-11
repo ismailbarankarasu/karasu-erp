@@ -1,0 +1,40 @@
+using Microsoft.AspNetCore.Authorization;
+
+namespace Karasu.ERP.Api.Authorization;
+
+public static class AuthorizationPolicyRegistration
+{
+    public static void AddPermissionPolicies(this AuthorizationOptions options)
+    {
+        void Add(string policyName, string permission) =>
+            options.AddPolicy(policyName, p => p.Requirements.Add(new PermissionRequirement(permission)));
+
+        Add(Policies.RoleView, "Role.Role.View");
+        Add(Policies.RoleCreate, "Role.Role.Create");
+        Add(Policies.RoleUpdate, "Role.Role.Update");
+        Add(Policies.AuditView, "Audit.Log.View");
+
+        Add(Policies.ProductView, "Product.Product.View");
+        Add(Policies.ProductCreate, "Product.Product.Create");
+        Add(Policies.ProductUpdate, "Product.Product.Update");
+        Add(Policies.ProductDelete, "Product.Product.Delete");
+
+        Add(Policies.CustomerView, "Customer.Customer.View");
+        Add(Policies.CustomerCreate, "Customer.Customer.Create");
+        Add(Policies.CustomerUpdate, "Customer.Customer.Update");
+        Add(Policies.CustomerDelete, "Customer.Customer.Delete");
+
+        Add(Policies.OrderView, "Order.Order.View");
+        Add(Policies.OrderCreate, "Order.Order.Create");
+        Add(Policies.OrderConfirm, "Order.Order.Confirm");
+        Add(Policies.OrderCancel, "Order.Order.Cancel");
+
+        Add(Policies.StockView, "Stock.Item.View");
+        Add(Policies.StockAdjust, "Stock.Item.Adjust");
+
+        Add(Policies.PosSessionOpen, "Pos.Session.Open");
+        Add(Policies.PosSessionClose, "Pos.Session.Close");
+        Add(Policies.PosSessionView, "Pos.Session.View");
+        Add(Policies.PosSaleSell, "Pos.Sale.Sell");
+    }
+}
