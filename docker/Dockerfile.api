@@ -1,0 +1,38 @@
+# Build stage
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+COPY ["src/Karasu.ERP.Api/Karasu.ERP.Api.csproj", "Karasu.ERP.Api/"]
+COPY ["src/Karasu.ERP.Application/Karasu.ERP.Application.csproj", "Karasu.ERP.Application/"]
+COPY ["src/Karasu.ERP.Domain/Karasu.ERP.Domain.csproj", "Karasu.ERP.Domain/"]
+COPY ["src/Karasu.ERP.Infrastructure/Karasu.ERP.Infrastructure.csproj", "Karasu.ERP.Infrastructure/"]
+COPY ["src/Karasu.ERP.Persistence/Karasu.ERP.Persistence.csproj", "Karasu.ERP.Persistence/"]
+COPY ["src/Karasu.ERP.Identity/Karasu.ERP.Identity.csproj", "Karasu.ERP.Identity/"]
+COPY ["src/Karasu.ERP.Shared/Karasu.ERP.Shared.csproj", "Karasu.ERP.Shared/"]
+
+RUN dotnet restore "Karasu.ERP.Api/Karasu.ERP.Api.csproj"
+
+COPY src/ .
+WORKDIR /src/Karasu.ERP.Api
+RUN dotnet build "Karasu.ERP.Api.csproj" -c Release -o /app/build
+
+# Publish stage
+FROM build AS publish
+RUN dotnet publish "Karasu.ERP.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+
+# Runtime stage
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
+WORKDIR /app
+
+RUN adduser --disabled-password --gecos "" appuser && chown -R appuser /app
+USER appuser
+
+COPY --from=publish /app/publish .
+
+EXPOSE 8080
+ENV ASPNETCORE_URLS=http://+:8080
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD curl -f http://localhost:8080/health/live || exit 1
+
+ENTRYPOINT ["dotnet", "Karasu.ERP.Api.dll"]

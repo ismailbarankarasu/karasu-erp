@@ -1,0 +1,138 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.api
+    ports:
+      - "5000:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=KarasuERP;User Id=sa;Password=Karasu@2026!;TrustServerCertificate=True
+      - ConnectionStrings__Redis=redis:6379
+      - Elasticsearch__Uri=http://elasticsearch:9200
+      - Jwt__Secret=KarasuERP-Super-Secret-Key-Min-32-Chars!!
+      - Jwt__Issuer=karasu-erp
+      - Jwt__Audience=karasu-erp-clients
+      - Jwt__AccessTokenExpirationMinutes=15
+      - Jwt__RefreshTokenExpirationDays=7
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - karasu-network
+    restart: unless-stopped
+
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=Karasu@2026!
+      - MSSQL_PID=Developer
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    healthcheck:
+      test: /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "Karasu@2026!" -C -Q "SELECT 1" || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - karasu-network
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_DB=karasu_erp
+      - POSTGRES_USER=karasu
+      - POSTGRES_PASSWORD=Karasu@2026!
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U karasu -d karasu_erp"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - karasu-network
+    profiles:
+      - postgres
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - karasu-network
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.0
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: curl -s http://localhost:9200/_cluster/health | grep -q '"status":"green"\|"status":"yellow"'
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+    networks:
+      - karasu-network
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.12.0
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - karasu-network
+
+  seq:
+    image: datalust/seq:latest
+    ports:
+      - "5341:80"
+    environment:
+      - ACCEPT_EULA=Y
+    volumes:
+      - seq-data:/data
+    networks:
+      - karasu-network
+    profiles:
+      - logging
+
+volumes:
+  sqlserver-data:
+  postgres-data:
+  redis-data:
+  elasticsearch-data:
+  seq-data:
+
+networks:
+  karasu-network:
+    driver: bridge

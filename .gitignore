@@ -1,0 +1,37 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+*.DotSettings.user
+
+## IDE
+.idea/
+*.swp
+
+## Secrets
+appsettings.Development.json
+appsettings.Local.json
+*.pfx
+.env
+.env.*
+
+## Docker
+docker/volumes/
+
+## Logs
+logs/
+*.log
+
+## OS
+Thumbs.db
+.DS_Store
+
+## Test
+TestResults/
+coverage/
+
+## NuGet
+*.nupkg
+packages/
