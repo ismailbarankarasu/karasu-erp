@@ -51,3 +51,15 @@ public class PosTransaction : TenantEntity
     public PosSession Session { get; set; } = null!;
     public Order Order { get; set; } = null!;
 }
+
+public class PosReturn : TenantEntity
+{
+    public Guid SessionId { get; set; }
+    public Guid OriginalOrderId { get; set; }
+    public string? Reason { get; set; }
+    public decimal RefundAmount { get; set; }
+    public PaymentMethod RefundMethod { get; set; }
+
+    public PosSession Session { get; set; } = null!;
+    public Order OriginalOrder { get; set; } = null!;
+}

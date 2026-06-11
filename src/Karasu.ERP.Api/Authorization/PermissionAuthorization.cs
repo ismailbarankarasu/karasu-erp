@@ -56,4 +56,5 @@ public static class Policies
     public const string PosSessionClose = "Pos.Session.Close";
     public const string PosSessionView = "Pos.Session.View";
     public const string PosSaleSell = "Pos.Sale.Sell";
+    public const string PosSaleReturn = "Pos.Sale.Return";
 }

@@ -1,4 +1,5 @@
 using Karasu.ERP.Application.Common.Interfaces;
+using Karasu.ERP.Application.Features.Pos;
 using Karasu.ERP.Domain.Entities;
 using Karasu.ERP.Domain.Enums;
 using Karasu.ERP.Domain.Events;
@@ -101,13 +102,13 @@ public class CreatePosSaleCommandHandler : IRequestHandler<CreatePosSaleCommand,
                 line.Discount);
         }
 
-        var paymentTotal = request.Payments.Sum(p => p.Amount);
-        if (paymentTotal != order.GrandTotal)
-        {
-            return Result<PosSaleResultDto>.Failure(
-                $"Ödeme tutarı ({paymentTotal:N2}) sipariş toplamına ({order.GrandTotal:N2}) eşit olmalıdır.",
-                "PAYMENT_MISMATCH");
-        }
+        var paymentValidation = PosPaymentHelper.ValidateAndNormalize(
+            request.Payments, order.GrandTotal, request.CustomerId);
+
+        if (!paymentValidation.IsValid)
+            return Result<PosSaleResultDto>.Failure(paymentValidation.Error!, paymentValidation.ErrorCode);
+
+        var normalizedPayments = paymentValidation.NormalizedPayments;
 
         try
         {
@@ -135,7 +136,7 @@ public class CreatePosSaleCommandHandler : IRequestHandler<CreatePosSaleCommand,
         await _orderRepository.AddAsync(order, cancellationToken);
         _context.OrderStatusHistories.Add(order.StatusHistory.Last());
 
-        foreach (var payment in request.Payments)
+        foreach (var payment in normalizedPayments)
         {
             await _context.PosTransactions.AddAsync(new PosTransaction
             {
@@ -148,6 +149,19 @@ public class CreatePosSaleCommandHandler : IRequestHandler<CreatePosSaleCommand,
                 ChangeAmount = payment.ChangeAmount,
                 CreatedAt = DateTime.UtcNow
             }, cancellationToken);
+        }
+
+        var creditAmount = normalizedPayments
+            .Where(p => p.Method == PaymentMethod.Credit)
+            .Sum(p => p.Amount);
+
+        if (creditAmount > 0 && request.CustomerId.HasValue)
+        {
+            var customer = await _context.Customers
+                .FirstOrDefaultAsync(c => c.Id == request.CustomerId.Value, cancellationToken);
+
+            if (customer is not null)
+                customer.Balance += creditAmount;
         }
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -173,6 +187,7 @@ public class CreatePosSaleCommandHandler : IRequestHandler<CreatePosSaleCommand,
             order.Id,
             order.OrderNumber,
             order.GrandTotal,
-            request.Payments.Count));
+            normalizedPayments.Count,
+            normalizedPayments.Select(p => new PosPaymentSummaryDto(p.Method, p.Amount, p.ChangeAmount)).ToList()));
     }
 }

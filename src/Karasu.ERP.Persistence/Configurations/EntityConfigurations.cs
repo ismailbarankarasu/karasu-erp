@@ -218,3 +218,20 @@ public class PosTransactionConfiguration : IEntityTypeConfiguration<PosTransacti
             .OnDelete(DeleteBehavior.NoAction);
     }
 }
+
+public class PosReturnConfiguration : IEntityTypeConfiguration<PosReturn>
+{
+    public void Configure(EntityTypeBuilder<PosReturn> builder)
+    {
+        builder.ToTable("PosReturns");
+        builder.HasKey(r => r.Id);
+        builder.Property(r => r.Reason).HasMaxLength(500);
+        builder.Property(r => r.RefundAmount).HasPrecision(18, 4);
+        builder.HasIndex(r => new { r.TenantId, r.SessionId, r.CreatedAt });
+        builder.HasIndex(r => new { r.TenantId, r.OriginalOrderId });
+        builder.HasOne(r => r.Session).WithMany().HasForeignKey(r => r.SessionId)
+            .OnDelete(DeleteBehavior.NoAction);
+        builder.HasOne(r => r.OriginalOrder).WithMany().HasForeignKey(r => r.OriginalOrderId)
+            .OnDelete(DeleteBehavior.NoAction);
+    }
+}

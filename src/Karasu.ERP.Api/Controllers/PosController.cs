@@ -1,9 +1,11 @@
 using Karasu.ERP.Api.Authorization;
 using Karasu.ERP.Api.Configuration;
 using Karasu.ERP.Application.Features.Pos.Commands.ClosePosSession;
+using Karasu.ERP.Application.Features.Pos.Commands.CreatePosReturn;
 using Karasu.ERP.Application.Features.Pos.Commands.CreatePosSale;
 using Karasu.ERP.Application.Features.Pos.Commands.OpenPosSession;
 using Karasu.ERP.Application.Features.Pos.Queries.GetCurrentPosSession;
+using Karasu.ERP.Application.Features.Pos.Queries.PrintPosReceipt;
 using Karasu.ERP.Application.Features.Pos.Queries.SearchPosProducts;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -54,6 +56,25 @@ public class PosController : ControllerBase
     {
         var result = await _mediator.Send(command, ct);
         return result.IsSuccess ? Ok(Wrap(result.Data)) : BadRequest(WrapError(result.Error!, result.ErrorCode));
+    }
+
+    [HttpPost("returns")]
+    [Authorize(Policy = Policies.PosSaleReturn)]
+    public async Task<IActionResult> CreateReturn([FromBody] CreatePosReturnCommand command, CancellationToken ct)
+    {
+        var result = await _mediator.Send(command, ct);
+        return result.IsSuccess ? Ok(Wrap(result.Data)) : BadRequest(WrapError(result.Error!, result.ErrorCode));
+    }
+
+    [HttpPost("receipt/{orderId:guid}/print")]
+    [Authorize(Policy = Policies.PosSaleSell)]
+    public async Task<IActionResult> PrintReceipt(Guid orderId, CancellationToken ct)
+    {
+        var result = await _mediator.Send(new PrintPosReceiptQuery(orderId), ct);
+        if (!result.IsSuccess)
+            return BadRequest(WrapError(result.Error!, result.ErrorCode));
+
+        return File(result.Data!.Content, "application/pdf", result.Data.FileName);
     }
 
     [HttpGet("products/search")]

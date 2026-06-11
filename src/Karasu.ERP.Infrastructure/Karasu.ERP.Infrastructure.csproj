@@ -13,6 +13,7 @@
     <PackageReference Include="StackExchange.Redis" Version="2.7.33" />
     <PackageReference Include="Serilog.AspNetCore" Version="8.0.1" />
     <PackageReference Include="Serilog.Sinks.Elasticsearch" Version="10.0.0" />
+    <PackageReference Include="QuestPDF" Version="2024.10.3" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Karasu.ERP.Application\Karasu.ERP.Application.csproj" />

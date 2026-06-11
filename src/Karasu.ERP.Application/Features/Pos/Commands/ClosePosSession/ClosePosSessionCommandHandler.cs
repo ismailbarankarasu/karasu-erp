@@ -50,14 +50,23 @@ public class ClosePosSessionCommandHandler : IRequestHandler<ClosePosSessionComm
             .Where(t => t.SessionId == session.Id && !t.IsDeleted)
             .ToListAsync(cancellationToken);
 
+        var returns = await _context.PosReturns
+            .AsNoTracking()
+            .Where(r => r.SessionId == session.Id && !r.IsDeleted)
+            .ToListAsync(cancellationToken);
+
         var totalSales = transactions.Sum(t => t.Amount);
+        var totalRefunds = returns.Sum(r => r.RefundAmount);
         var cashReceived = transactions
             .Where(t => t.PaymentMethod == PaymentMethod.Cash)
             .Sum(t => t.Amount);
         var cashChange = transactions
             .Where(t => t.PaymentMethod == PaymentMethod.Cash)
             .Sum(t => t.ChangeAmount);
-        var expectedCash = session.OpeningBalance + cashReceived - cashChange;
+        var cashRefunds = returns
+            .Where(r => r.RefundMethod == PaymentMethod.Cash)
+            .Sum(r => r.RefundAmount);
+        var expectedCash = session.OpeningBalance + cashReceived - cashChange - cashRefunds;
         var cashVariance = request.ClosingBalance - expectedCash;
 
         try
@@ -76,8 +85,10 @@ public class ClosePosSessionCommandHandler : IRequestHandler<ClosePosSessionComm
             session.OpeningBalance,
             request.ClosingBalance,
             totalSales,
+            totalRefunds,
             expectedCash,
             cashVariance,
-            transactions.Select(t => t.OrderId).Distinct().Count()));
+            transactions.Select(t => t.OrderId).Distinct().Count(),
+            returns.Count));
     }
 }

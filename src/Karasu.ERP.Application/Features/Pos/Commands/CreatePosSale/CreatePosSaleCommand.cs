@@ -14,10 +14,17 @@ public record CreatePosSaleCommand(
 public record PosPaymentDto(
     PaymentMethod Method,
     decimal Amount,
+    decimal? TenderedAmount = null,
     decimal ChangeAmount = 0);
 
 public record PosSaleResultDto(
     Guid OrderId,
     string OrderNumber,
     decimal GrandTotal,
-    int PaymentCount);
+    int PaymentCount,
+    IReadOnlyList<PosPaymentSummaryDto> Payments);
+
+public record PosPaymentSummaryDto(
+    PaymentMethod Method,
+    decimal Amount,
+    decimal ChangeAmount);

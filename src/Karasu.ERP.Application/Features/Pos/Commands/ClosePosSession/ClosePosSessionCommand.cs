@@ -10,6 +10,8 @@ public record PosSessionCloseDto(
     decimal OpeningBalance,
     decimal ClosingBalance,
     decimal TotalSales,
+    decimal TotalRefunds,
     decimal ExpectedCash,
     decimal CashVariance,
-    int SaleCount);
+    int SaleCount,
+    int ReturnCount);

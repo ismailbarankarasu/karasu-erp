@@ -22,6 +22,7 @@ public interface IApplicationDbContext
     DbSet<StockMovement> StockMovements { get; }
     DbSet<PosSession> PosSessions { get; }
     DbSet<PosTransaction> PosTransactions { get; }
+    DbSet<PosReturn> PosReturns { get; }
     DbSet<AuditLog> AuditLogs { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);

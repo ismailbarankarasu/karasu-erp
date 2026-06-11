@@ -18,6 +18,7 @@ public static class DependencyInjection
         services.AddSingleton<IDateTimeService, DateTimeService>();
         services.AddScoped<ITenantNotificationPublisher, TenantNotificationPublisher>();
         services.AddScoped<ICacheService, RedisCacheService>();
+        services.AddScoped<IReceiptPdfService, ReceiptPdfService>();
 
         var redisConnection = configuration.GetConnectionString("Redis");
         if (!string.IsNullOrEmpty(redisConnection))

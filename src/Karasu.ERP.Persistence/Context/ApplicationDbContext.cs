@@ -38,6 +38,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
     public DbSet<StockMovement> StockMovements => Set<StockMovement>();
     public DbSet<PosSession> PosSessions => Set<PosSession>();
     public DbSet<PosTransaction> PosTransactions => Set<PosTransaction>();
+    public DbSet<PosReturn> PosReturns => Set<PosReturn>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<Permission> Permissions => Set<Permission>();

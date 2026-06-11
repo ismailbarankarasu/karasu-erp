@@ -8,51 +8,43 @@ using Xunit;
 
 namespace Karasu.ERP.IntegrationTests.Pos;
 
-public class PosEndpointsTests : IClassFixture<CustomWebApplicationFactory>
+public class PosMultiPaymentTests : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly HttpClient _client;
 
-    public PosEndpointsTests(CustomWebApplicationFactory factory)
-    {
-        _client = factory.CreateClient();
-    }
+    public PosMultiPaymentTests(CustomWebApplicationFactory factory) => _client = factory.CreateClient();
 
     [Fact]
-    public async Task Pos_full_sale_flow_should_work()
+    public async Task Pos_split_payment_with_change_should_work()
     {
-        var slug = $"pos-{Guid.NewGuid():N}"[..18];
+        var slug = $"posmp-{Guid.NewGuid():N}"[..18];
         var registerResponse = await _client.PostAsJsonAsync("/api/v1/auth/register", new
         {
-            companyName = "POS Test Co",
+            companyName = "Multi Pay Co",
             slug,
             email = $"{slug}@test.com",
             password = "Password123",
-            fullName = "POS Tester"
+            fullName = "Multi Pay Tester"
         });
-
         registerResponse.EnsureSuccessStatusCode();
+
         var token = (await registerResponse.Content.ReadFromJsonAsync<JsonElement>())
             .GetProperty("data").GetProperty("accessToken").GetString()!;
-
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         var branchId = (await (await _client.GetAsync("/api/v1/branches")).Content.ReadFromJsonAsync<JsonElement>())
             .GetProperty("data")[0].GetProperty("id").GetGuid();
-
         var unitId = (await (await _client.GetAsync("/api/v1/units")).Content.ReadFromJsonAsync<JsonElement>())
             .GetProperty("data")[0].GetProperty("id").GetGuid();
 
-        var sku = $"POS-{Guid.NewGuid():N}"[..12];
         var createProductResponse = await _client.PostAsJsonAsync("/api/v1/products", new
         {
-            sku,
-            barcode = $"869{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() % 1000000000000:D12}",
-            name = "POS Test Ürün",
-            categoryId = (Guid?)null,
-            brandId = (Guid?)null,
+            sku = $"MP-{Guid.NewGuid():N}"[..12],
+            barcode = (string?)null,
+            name = "Multi Pay Ürün",
             unitId,
             purchasePrice = 10m,
-            salePrice = 50m,
+            salePrice = 100m,
             taxRate = 20m,
             minStock = 1m
         });
@@ -60,7 +52,6 @@ public class PosEndpointsTests : IClassFixture<CustomWebApplicationFactory>
 
         var productId = (await createProductResponse.Content.ReadFromJsonAsync<JsonElement>())
             .GetProperty("data").GetProperty("id").GetGuid();
-
         var variantId = (await (await _client.GetAsync($"/api/v1/products/{productId}")).Content.ReadFromJsonAsync<JsonElement>())
             .GetProperty("data").GetProperty("defaultVariantId").GetGuid();
 
@@ -71,26 +62,15 @@ public class PosEndpointsTests : IClassFixture<CustomWebApplicationFactory>
         {
             warehouseId,
             productVariantId = variantId,
-            quantityDelta = 20m,
-            note = "POS test stok"
+            quantityDelta = 5m,
+            note = "multi pay stok"
         }).ContinueWith(r => r.Result.EnsureSuccessStatusCode());
 
-        var openSessionResponse = await _client.PostAsJsonAsync("/api/v1/pos/sessions/open", new
+        var sessionId = (await (await _client.PostAsJsonAsync("/api/v1/pos/sessions/open", new
         {
             branchId,
-            openingBalance = 100m
-        });
-        openSessionResponse.EnsureSuccessStatusCode();
-        var sessionId = (await openSessionResponse.Content.ReadFromJsonAsync<JsonElement>())
-            .GetProperty("data").GetProperty("id").GetGuid();
-
-        var currentSession = await _client.GetAsync("/api/v1/pos/sessions/current");
-        currentSession.EnsureSuccessStatusCode();
-        var currentJson = await currentSession.Content.ReadFromJsonAsync<JsonElement>();
-        currentJson.GetProperty("data").GetProperty("id").GetGuid().Should().Be(sessionId);
-
-        var searchResponse = await _client.GetAsync($"/api/v1/pos/products/search?search=POS");
-        searchResponse.EnsureSuccessStatusCode();
+            openingBalance = 50m
+        })).Content.ReadFromJsonAsync<JsonElement>()).GetProperty("data").GetProperty("id").GetGuid();
 
         var saleResponse = await _client.PostAsJsonAsync("/api/v1/pos/sales", new
         {
@@ -101,87 +81,56 @@ public class PosEndpointsTests : IClassFixture<CustomWebApplicationFactory>
                 new
                 {
                     productVariantId = variantId,
-                    quantity = 2m,
-                    unitPrice = 50m,
+                    quantity = 1m,
+                    unitPrice = 100m,
                     taxRate = 20m,
                     discount = 0m
                 }
             },
-            payments = new[]
+            payments = new object[]
             {
-                new { method = 0, amount = 120m, changeAmount = 0m }
+                new { method = 0, amount = 50m, tenderedAmount = 60m },
+                new { method = 1, amount = 70m }
             }
         });
 
         saleResponse.EnsureSuccessStatusCode();
         var saleJson = await saleResponse.Content.ReadFromJsonAsync<JsonElement>();
         saleJson.GetProperty("data").GetProperty("grandTotal").GetDecimal().Should().Be(120m);
-        var orderId = saleJson.GetProperty("data").GetProperty("orderId").GetGuid();
 
-        var receiptResponse = await _client.PostAsync($"/api/v1/pos/receipt/{orderId}/print", null);
-        receiptResponse.EnsureSuccessStatusCode();
-        receiptResponse.Content.Headers.ContentType!.MediaType.Should().Be("application/pdf");
-        (await receiptResponse.Content.ReadAsByteArrayAsync()).Length.Should().BeGreaterThan(100);
-
-        var stockAfter = await (await _client.GetAsync("/api/v1/stock")).Content.ReadFromJsonAsync<JsonElement>();
-        stockAfter.GetProperty("data").GetProperty("items")[0].GetProperty("quantity").GetDecimal().Should().Be(18m);
-
-        var returnResponse = await _client.PostAsJsonAsync("/api/v1/pos/returns", new
-        {
-            sessionId,
-            originalOrderId = orderId,
-            refundMethod = 0,
-            reason = "Test iadesi"
-        });
-        returnResponse.EnsureSuccessStatusCode();
-        var returnJson = await returnResponse.Content.ReadFromJsonAsync<JsonElement>();
-        returnJson.GetProperty("data").GetProperty("refundAmount").GetDecimal().Should().Be(120m);
-
-        var stockAfterReturn = await (await _client.GetAsync("/api/v1/stock")).Content.ReadFromJsonAsync<JsonElement>();
-        stockAfterReturn.GetProperty("data").GetProperty("items")[0].GetProperty("quantity").GetDecimal().Should().Be(20m);
-
-        var closeResponse = await _client.PostAsJsonAsync($"/api/v1/pos/sessions/{sessionId}/close", new
-        {
-            closingBalance = 100m
-        });
-        closeResponse.EnsureSuccessStatusCode();
-
-        var afterClose = await _client.GetAsync("/api/v1/pos/sessions/current");
-        afterClose.EnsureSuccessStatusCode();
-        (await afterClose.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("data").ValueKind
-            .Should().Be(JsonValueKind.Null);
+        var payments = saleJson.GetProperty("data").GetProperty("payments");
+        payments.GetArrayLength().Should().Be(2);
+        payments[0].GetProperty("changeAmount").GetDecimal().Should().Be(10m);
     }
 
     [Fact]
-    public async Task Pos_sale_should_fail_without_stock()
+    public async Task Pos_credit_payment_should_require_customer()
     {
-        var slug = $"pos2-{Guid.NewGuid():N}"[..18];
+        var slug = $"poscr-{Guid.NewGuid():N}"[..18];
         var registerResponse = await _client.PostAsJsonAsync("/api/v1/auth/register", new
         {
-            companyName = "POS Fail Co",
+            companyName = "Credit Pay Co",
             slug,
             email = $"{slug}@test.com",
             password = "Password123",
-            fullName = "POS Fail Tester"
+            fullName = "Credit Pay Tester"
         });
-
         registerResponse.EnsureSuccessStatusCode();
+
         var token = (await registerResponse.Content.ReadFromJsonAsync<JsonElement>())
             .GetProperty("data").GetProperty("accessToken").GetString()!;
-
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         var branchId = (await (await _client.GetAsync("/api/v1/branches")).Content.ReadFromJsonAsync<JsonElement>())
             .GetProperty("data")[0].GetProperty("id").GetGuid();
-
         var unitId = (await (await _client.GetAsync("/api/v1/units")).Content.ReadFromJsonAsync<JsonElement>())
             .GetProperty("data")[0].GetProperty("id").GetGuid();
 
         var createProductResponse = await _client.PostAsJsonAsync("/api/v1/products", new
         {
-            sku = $"POSF-{Guid.NewGuid():N}"[..14],
+            sku = $"CR-{Guid.NewGuid():N}"[..12],
             barcode = (string?)null,
-            name = "POS Fail Ürün",
+            name = "Credit Pay Ürün",
             unitId,
             purchasePrice = 10m,
             salePrice = 50m,
@@ -192,17 +141,25 @@ public class PosEndpointsTests : IClassFixture<CustomWebApplicationFactory>
 
         var productId = (await createProductResponse.Content.ReadFromJsonAsync<JsonElement>())
             .GetProperty("data").GetProperty("id").GetGuid();
-
         var variantId = (await (await _client.GetAsync($"/api/v1/products/{productId}")).Content.ReadFromJsonAsync<JsonElement>())
             .GetProperty("data").GetProperty("defaultVariantId").GetGuid();
 
-        var openSessionResponse = await _client.PostAsJsonAsync("/api/v1/pos/sessions/open", new
+        var stockList = await (await _client.GetAsync("/api/v1/stock")).Content.ReadFromJsonAsync<JsonElement>();
+        var warehouseId = stockList.GetProperty("data").GetProperty("items")[0].GetProperty("warehouseId").GetGuid();
+
+        await _client.PostAsJsonAsync("/api/v1/stock/adjust", new
+        {
+            warehouseId,
+            productVariantId = variantId,
+            quantityDelta = 2m,
+            note = "credit pay stok"
+        }).ContinueWith(r => r.Result.EnsureSuccessStatusCode());
+
+        var sessionId = (await (await _client.PostAsJsonAsync("/api/v1/pos/sessions/open", new
         {
             branchId,
             openingBalance = 0m
-        });
-        var sessionId = (await openSessionResponse.Content.ReadFromJsonAsync<JsonElement>())
-            .GetProperty("data").GetProperty("id").GetGuid();
+        })).Content.ReadFromJsonAsync<JsonElement>()).GetProperty("data").GetProperty("id").GetGuid();
 
         var saleResponse = await _client.PostAsJsonAsync("/api/v1/pos/sales", new
         {
@@ -219,7 +176,7 @@ public class PosEndpointsTests : IClassFixture<CustomWebApplicationFactory>
                     discount = 0m
                 }
             },
-            payments = new[] { new { method = 0, amount = 60m, changeAmount = 0m } }
+            payments = new[] { new { method = 3, amount = 60m } }
         });
 
         saleResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
