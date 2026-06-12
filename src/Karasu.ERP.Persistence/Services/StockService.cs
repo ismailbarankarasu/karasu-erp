@@ -207,7 +207,9 @@ public class StockService : IStockService
         Guid productVariantId,
         decimal quantityDelta,
         string? note,
-        CancellationToken ct)
+        CancellationToken ct,
+        string? referenceType = null,
+        Guid? referenceId = null)
     {
         var stockItem = await _context.StockItems
             .FirstOrDefaultAsync(s =>
@@ -237,10 +239,158 @@ public class StockService : IStockService
             StockItemId = stockItem.Id,
             Type = movementType,
             Quantity = Math.Abs(quantityDelta),
-            ReferenceType = StockReferenceTypes.Adjustment,
+            ReferenceType = referenceType ?? StockReferenceTypes.Adjustment,
+            ReferenceId = referenceId,
             Note = note,
             CreatedAt = DateTime.UtcNow
         }, ct);
+
+        return Result.Success();
+    }
+
+    public async Task<Result> CompleteTransferAsync(Guid transferId, CancellationToken ct)
+    {
+        var transfer = await _context.StockTransfers
+            .Include(t => t.Lines)
+            .FirstOrDefaultAsync(
+                t => t.Id == transferId &&
+                     t.TenantId == _tenantContext.TenantId &&
+                     !t.IsDeleted,
+                ct);
+
+        if (transfer is null)
+            return Result.Failure("Transfer bulunamadı.", "TRANSFER_NOT_FOUND");
+
+        if (transfer.Status != StockTransferStatus.Pending)
+            return Result.Failure("Sadece bekleyen transferler tamamlanabilir.", "TRANSFER_INVALID_STATUS");
+
+        if (transfer.FromWarehouseId == transfer.ToWarehouseId)
+            return Result.Failure("Kaynak ve hedef depo aynı olamaz.", "TRANSFER_SAME_WAREHOUSE");
+
+        if (transfer.Lines.Count == 0)
+            return Result.Failure("Transfer satırı bulunamadı.", "TRANSFER_EMPTY");
+
+        var variantIds = transfer.Lines.Select(l => l.ProductVariantId).Distinct().ToList();
+
+        var sourceItems = await _context.StockItems
+            .Where(s => s.WarehouseId == transfer.FromWarehouseId && variantIds.Contains(s.ProductVariantId))
+            .ToDictionaryAsync(s => s.ProductVariantId, ct);
+
+        foreach (var line in transfer.Lines)
+        {
+            if (!sourceItems.TryGetValue(line.ProductVariantId, out var sourceItem))
+                return Result.Failure("Kaynak depoda stok kaydı bulunamadı.", "STOCK_ITEM_NOT_FOUND");
+
+            try
+            {
+                sourceItem.Deduct(line.Quantity);
+            }
+            catch (InvalidOperationException)
+            {
+                return Result.Failure("Kaynak depoda yetersiz stok.", "INSUFFICIENT_STOCK");
+            }
+
+            await _context.StockMovements.AddAsync(new StockMovement
+            {
+                Id = Guid.NewGuid(),
+                TenantId = _tenantContext.TenantId,
+                StockItemId = sourceItem.Id,
+                Type = StockMovementType.Transfer,
+                Quantity = line.Quantity,
+                ReferenceType = StockReferenceTypes.Transfer,
+                ReferenceId = transfer.Id,
+                Note = "Depolar arası transfer (çıkış)",
+                CreatedAt = DateTime.UtcNow
+            }, ct);
+
+            var destItem = await _context.StockItems
+                .FirstOrDefaultAsync(s =>
+                    s.WarehouseId == transfer.ToWarehouseId &&
+                    s.ProductVariantId == line.ProductVariantId &&
+                    !s.IsDeleted,
+                    ct);
+
+            if (destItem is null)
+            {
+                destItem = new StockItem
+                {
+                    Id = Guid.NewGuid(),
+                    TenantId = _tenantContext.TenantId,
+                    WarehouseId = transfer.ToWarehouseId,
+                    ProductVariantId = line.ProductVariantId,
+                    Quantity = 0,
+                    ReservedQuantity = 0,
+                    MinStock = sourceItem.MinStock,
+                    CreatedAt = DateTime.UtcNow
+                };
+                await _context.StockItems.AddAsync(destItem, ct);
+            }
+
+            destItem.Restore(line.Quantity);
+
+            await _context.StockMovements.AddAsync(new StockMovement
+            {
+                Id = Guid.NewGuid(),
+                TenantId = _tenantContext.TenantId,
+                StockItemId = destItem.Id,
+                Type = StockMovementType.Transfer,
+                Quantity = line.Quantity,
+                ReferenceType = StockReferenceTypes.Transfer,
+                ReferenceId = transfer.Id,
+                Note = "Depolar arası transfer (giriş)",
+                CreatedAt = DateTime.UtcNow
+            }, ct);
+        }
+
+        transfer.Status = StockTransferStatus.Completed;
+        transfer.CompletedAt = DateTime.UtcNow;
+
+        return Result.Success();
+    }
+
+    public async Task<Result> CompleteCountAsync(Guid countId, CancellationToken ct)
+    {
+        var count = await _context.StockCounts
+            .Include(c => c.Lines)
+            .FirstOrDefaultAsync(
+                c => c.Id == countId &&
+                     c.TenantId == _tenantContext.TenantId &&
+                     !c.IsDeleted,
+                ct);
+
+        if (count is null)
+            return Result.Failure("Sayım bulunamadı.", "COUNT_NOT_FOUND");
+
+        if (count.Status != StockCountStatus.InProgress)
+            return Result.Failure("Sadece devam eden sayımlar tamamlanabilir.", "COUNT_INVALID_STATUS");
+
+        if (count.Lines.Count == 0)
+            return Result.Failure("Sayım satırı bulunamadı.", "COUNT_EMPTY");
+
+        if (count.Lines.Any(l => !l.CountedQty.HasValue))
+            return Result.Failure("Tüm sayım satırları için sayılan miktar girilmelidir.", "COUNT_LINES_INCOMPLETE");
+
+        foreach (var line in count.Lines)
+        {
+            var difference = line.CountedQty!.Value - line.SystemQty;
+            if (difference == 0)
+                continue;
+
+            var adjustResult = await AdjustStockAsync(
+                count.WarehouseId,
+                line.ProductVariantId,
+                difference,
+                "Stok sayımı düzeltmesi",
+                ct,
+                StockReferenceTypes.Count,
+                count.Id);
+
+            if (!adjustResult.IsSuccess)
+                return adjustResult;
+        }
+
+        count.Status = StockCountStatus.Completed;
+        count.CompletedAt = DateTime.UtcNow;
 
         return Result.Success();
     }

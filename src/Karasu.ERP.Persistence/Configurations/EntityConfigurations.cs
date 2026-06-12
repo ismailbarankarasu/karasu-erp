@@ -188,6 +188,65 @@ public class StockMovementConfiguration : IEntityTypeConfiguration<StockMovement
     }
 }
 
+public class StockTransferConfiguration : IEntityTypeConfiguration<StockTransfer>
+{
+    public void Configure(EntityTypeBuilder<StockTransfer> builder)
+    {
+        builder.ToTable("StockTransfers");
+        builder.HasKey(t => t.Id);
+        builder.Property(t => t.Note).HasMaxLength(500);
+        builder.HasIndex(t => new { t.TenantId, t.Status, t.CreatedAt });
+        builder.HasOne(t => t.FromWarehouse).WithMany().HasForeignKey(t => t.FromWarehouseId)
+            .OnDelete(DeleteBehavior.NoAction);
+        builder.HasOne(t => t.ToWarehouse).WithMany().HasForeignKey(t => t.ToWarehouseId)
+            .OnDelete(DeleteBehavior.NoAction);
+    }
+}
+
+public class StockTransferLineConfiguration : IEntityTypeConfiguration<StockTransferLine>
+{
+    public void Configure(EntityTypeBuilder<StockTransferLine> builder)
+    {
+        builder.ToTable("StockTransferLines");
+        builder.HasKey(l => l.Id);
+        builder.Property(l => l.Quantity).HasPrecision(18, 4);
+        builder.HasIndex(l => new { l.TenantId, l.TransferId, l.ProductVariantId });
+        builder.HasOne(l => l.Transfer).WithMany(t => t.Lines).HasForeignKey(l => l.TransferId)
+            .OnDelete(DeleteBehavior.NoAction);
+        builder.HasOne(l => l.ProductVariant).WithMany().HasForeignKey(l => l.ProductVariantId)
+            .OnDelete(DeleteBehavior.NoAction);
+    }
+}
+
+public class StockCountConfiguration : IEntityTypeConfiguration<StockCount>
+{
+    public void Configure(EntityTypeBuilder<StockCount> builder)
+    {
+        builder.ToTable("StockCounts");
+        builder.HasKey(c => c.Id);
+        builder.Property(c => c.Note).HasMaxLength(500);
+        builder.HasIndex(c => new { c.TenantId, c.WarehouseId, c.Status });
+        builder.HasOne(c => c.Warehouse).WithMany().HasForeignKey(c => c.WarehouseId)
+            .OnDelete(DeleteBehavior.NoAction);
+    }
+}
+
+public class StockCountLineConfiguration : IEntityTypeConfiguration<StockCountLine>
+{
+    public void Configure(EntityTypeBuilder<StockCountLine> builder)
+    {
+        builder.ToTable("StockCountLines");
+        builder.HasKey(l => l.Id);
+        builder.Property(l => l.SystemQty).HasPrecision(18, 4);
+        builder.Property(l => l.CountedQty).HasPrecision(18, 4);
+        builder.HasIndex(l => new { l.TenantId, l.CountId, l.ProductVariantId });
+        builder.HasOne(l => l.Count).WithMany(c => c.Lines).HasForeignKey(l => l.CountId)
+            .OnDelete(DeleteBehavior.NoAction);
+        builder.HasOne(l => l.ProductVariant).WithMany().HasForeignKey(l => l.ProductVariantId)
+            .OnDelete(DeleteBehavior.NoAction);
+    }
+}
+
 public class PosSessionConfiguration : IEntityTypeConfiguration<PosSession>
 {
     public void Configure(EntityTypeBuilder<PosSession> builder)

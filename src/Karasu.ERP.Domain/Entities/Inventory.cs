@@ -71,8 +71,57 @@ public class StockMovement : TenantEntity
     public StockItem StockItem { get; set; } = null!;
 }
 
+public class StockTransfer : TenantEntity
+{
+    public Guid FromWarehouseId { get; set; }
+    public Guid ToWarehouseId { get; set; }
+    public StockTransferStatus Status { get; set; } = StockTransferStatus.Pending;
+    public Guid RequestedBy { get; set; }
+    public DateTime? CompletedAt { get; set; }
+    public string? Note { get; set; }
+
+    public Warehouse FromWarehouse { get; set; } = null!;
+    public Warehouse ToWarehouse { get; set; } = null!;
+    public ICollection<StockTransferLine> Lines { get; set; } = new List<StockTransferLine>();
+}
+
+public class StockTransferLine : TenantEntity
+{
+    public Guid TransferId { get; set; }
+    public Guid ProductVariantId { get; set; }
+    public decimal Quantity { get; set; }
+
+    public StockTransfer Transfer { get; set; } = null!;
+    public ProductVariant ProductVariant { get; set; } = null!;
+}
+
+public class StockCount : TenantEntity
+{
+    public Guid WarehouseId { get; set; }
+    public StockCountStatus Status { get; set; } = StockCountStatus.InProgress;
+    public Guid CountedBy { get; set; }
+    public DateTime? CompletedAt { get; set; }
+    public string? Note { get; set; }
+
+    public Warehouse Warehouse { get; set; } = null!;
+    public ICollection<StockCountLine> Lines { get; set; } = new List<StockCountLine>();
+}
+
+public class StockCountLine : TenantEntity
+{
+    public Guid CountId { get; set; }
+    public Guid ProductVariantId { get; set; }
+    public decimal SystemQty { get; set; }
+    public decimal? CountedQty { get; set; }
+
+    public StockCount Count { get; set; } = null!;
+    public ProductVariant ProductVariant { get; set; } = null!;
+}
+
 public static class StockReferenceTypes
 {
     public const string Order = "Order";
     public const string Adjustment = "Adjustment";
+    public const string Transfer = "Transfer";
+    public const string Count = "Count";
 }

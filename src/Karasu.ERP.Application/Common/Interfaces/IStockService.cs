@@ -33,5 +33,11 @@ public interface IStockService
         Guid productVariantId,
         decimal quantityDelta,
         string? note,
-        CancellationToken ct);
+        CancellationToken ct,
+        string? referenceType = null,
+        Guid? referenceId = null);
+
+    Task<Result> CompleteTransferAsync(Guid transferId, CancellationToken ct);
+
+    Task<Result> CompleteCountAsync(Guid countId, CancellationToken ct);
 }

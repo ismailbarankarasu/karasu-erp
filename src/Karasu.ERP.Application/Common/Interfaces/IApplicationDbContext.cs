@@ -20,6 +20,10 @@ public interface IApplicationDbContext
     DbSet<Warehouse> Warehouses { get; }
     DbSet<StockItem> StockItems { get; }
     DbSet<StockMovement> StockMovements { get; }
+    DbSet<StockTransfer> StockTransfers { get; }
+    DbSet<StockTransferLine> StockTransferLines { get; }
+    DbSet<StockCount> StockCounts { get; }
+    DbSet<StockCountLine> StockCountLines { get; }
     DbSet<PosSession> PosSessions { get; }
     DbSet<PosTransaction> PosTransactions { get; }
     DbSet<PosReturn> PosReturns { get; }

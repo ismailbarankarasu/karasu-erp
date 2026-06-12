@@ -47,6 +47,9 @@ public static class DatabaseSeeder
             // Stock
             Perm("Stock", "Item", "View"), Perm("Stock", "Item", "Adjust"),
             Perm("Stock", "Transfer", "Create"), Perm("Stock", "Count", "Create"),
+            // Warehouse
+            Perm("Warehouse", "Warehouse", "View"), Perm("Warehouse", "Warehouse", "Create"),
+            Perm("Warehouse", "Warehouse", "Update"), Perm("Warehouse", "Warehouse", "Delete"),
             // Finance
             Perm("Finance", "Account", "View"), Perm("Finance", "Account", "Create"),
             // Reports

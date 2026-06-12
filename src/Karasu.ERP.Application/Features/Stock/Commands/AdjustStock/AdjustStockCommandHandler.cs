@@ -54,6 +54,7 @@ public class AdjustStockCommandHandler : IRequestHandler<AdjustStockCommand, Res
         await _cacheService.RemoveByPatternAsync(
             $"{_tenantContext.TenantId}:stock:item:*",
             cancellationToken);
+        await _cacheService.RemoveAsync($"{_tenantContext.TenantId}:stock:alerts:critical", cancellationToken);
 
         return Result.Success();
     }

@@ -10,5 +10,7 @@ public enum OrderType { Sale, Return, Wholesale, Online, Pos }
 public enum PaymentMethod { Cash, CreditCard, BankTransfer, Credit }
 public enum PosSessionStatus { Open, Closed }
 public enum StockMovementType { In, Out, Transfer, Adjustment, Return }
+public enum StockTransferStatus { Pending, Completed, Cancelled }
+public enum StockCountStatus { InProgress, Completed, Cancelled }
 public enum InvoiceType { Standard, EInvoice, EArchive }
 public enum InvoiceStatus { Draft, Issued, Paid, Cancelled }

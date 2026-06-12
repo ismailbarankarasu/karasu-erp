@@ -51,6 +51,13 @@ public static class Policies
 
     public const string StockView = "Stock.View";
     public const string StockAdjust = "Stock.Adjust";
+    public const string StockTransferCreate = "Stock.Transfer.Create";
+    public const string StockCountCreate = "Stock.Count.Create";
+
+    public const string WarehouseView = "Warehouse.View";
+    public const string WarehouseCreate = "Warehouse.Create";
+    public const string WarehouseUpdate = "Warehouse.Update";
+    public const string WarehouseDelete = "Warehouse.Delete";
 
     public const string PosSessionOpen = "Pos.Session.Open";
     public const string PosSessionClose = "Pos.Session.Close";

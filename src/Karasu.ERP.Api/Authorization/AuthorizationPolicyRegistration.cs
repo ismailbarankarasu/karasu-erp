@@ -31,6 +31,13 @@ public static class AuthorizationPolicyRegistration
 
         Add(Policies.StockView, "Stock.Item.View");
         Add(Policies.StockAdjust, "Stock.Item.Adjust");
+        Add(Policies.StockTransferCreate, "Stock.Transfer.Create");
+        Add(Policies.StockCountCreate, "Stock.Count.Create");
+
+        Add(Policies.WarehouseView, "Warehouse.Warehouse.View");
+        Add(Policies.WarehouseCreate, "Warehouse.Warehouse.Create");
+        Add(Policies.WarehouseUpdate, "Warehouse.Warehouse.Update");
+        Add(Policies.WarehouseDelete, "Warehouse.Warehouse.Delete");
 
         Add(Policies.PosSessionOpen, "Pos.Session.Open");
         Add(Policies.PosSessionClose, "Pos.Session.Close");
