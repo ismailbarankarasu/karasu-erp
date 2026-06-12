@@ -37,6 +37,11 @@ public static class DatabaseSeeder
             Perm("Order", "Order", "View"), Perm("Order", "Order", "Create"),
             Perm("Order", "Order", "Update"), Perm("Order", "Order", "Delete"),
             Perm("Order", "Order", "Confirm"), Perm("Order", "Order", "Cancel"),
+            // Quotes
+            Perm("Quote", "Quote", "View"), Perm("Quote", "Quote", "Create"),
+            Perm("Quote", "Quote", "Update"), Perm("Quote", "Quote", "Convert"),
+            // Invoices
+            Perm("Invoice", "Invoice", "View"), Perm("Invoice", "Invoice", "Create"),
             // Customers
             Perm("Customer", "Customer", "View"), Perm("Customer", "Customer", "Create"),
             Perm("Customer", "Customer", "Update"), Perm("Customer", "Customer", "Delete"),

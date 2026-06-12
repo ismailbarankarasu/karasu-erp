@@ -46,8 +46,18 @@ public static class Policies
 
     public const string OrderView = "Order.View";
     public const string OrderCreate = "Order.Create";
+    public const string OrderUpdate = "Order.Update";
+    public const string OrderDelete = "Order.Delete";
     public const string OrderConfirm = "Order.Confirm";
     public const string OrderCancel = "Order.Cancel";
+
+    public const string QuoteView = "Quote.View";
+    public const string QuoteCreate = "Quote.Create";
+    public const string QuoteUpdate = "Quote.Update";
+    public const string QuoteConvert = "Quote.Convert";
+
+    public const string InvoiceView = "Invoice.View";
+    public const string InvoiceCreate = "Invoice.Create";
 
     public const string StockView = "Stock.View";
     public const string StockAdjust = "Stock.Adjust";

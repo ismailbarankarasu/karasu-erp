@@ -65,6 +65,72 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
     }
 }
 
+public class QuoteConfiguration : IEntityTypeConfiguration<Quote>
+{
+    public void Configure(EntityTypeBuilder<Quote> builder)
+    {
+        builder.ToTable("Quotes");
+        builder.HasKey(q => q.Id);
+        builder.Property(q => q.QuoteNumber).HasMaxLength(50).IsRequired();
+        builder.Property(q => q.SubTotal).HasPrecision(18, 4);
+        builder.Property(q => q.TaxTotal).HasPrecision(18, 4);
+        builder.Property(q => q.DiscountTotal).HasPrecision(18, 4);
+        builder.Property(q => q.GrandTotal).HasPrecision(18, 4);
+        builder.HasIndex(q => new { q.TenantId, q.QuoteNumber }).IsUnique();
+        builder.HasIndex(q => new { q.TenantId, q.Status, q.CreatedAt });
+        builder.HasMany(q => q.Lines).WithOne(l => l.Quote).HasForeignKey(l => l.QuoteId).OnDelete(DeleteBehavior.Cascade);
+        builder.HasOne(q => q.Branch).WithMany().HasForeignKey(q => q.BranchId).OnDelete(DeleteBehavior.NoAction);
+        builder.HasOne(q => q.Customer).WithMany().HasForeignKey(q => q.CustomerId).OnDelete(DeleteBehavior.NoAction);
+        builder.HasOne(q => q.ConvertedOrder).WithMany().HasForeignKey(q => q.ConvertedOrderId).OnDelete(DeleteBehavior.NoAction);
+    }
+}
+
+public class InvoiceConfiguration : IEntityTypeConfiguration<Invoice>
+{
+    public void Configure(EntityTypeBuilder<Invoice> builder)
+    {
+        builder.ToTable("Invoices");
+        builder.HasKey(i => i.Id);
+        builder.Property(i => i.InvoiceNumber).HasMaxLength(50).IsRequired();
+        builder.Property(i => i.SubTotal).HasPrecision(18, 4);
+        builder.Property(i => i.TaxTotal).HasPrecision(18, 4);
+        builder.Property(i => i.GrandTotal).HasPrecision(18, 4);
+        builder.HasIndex(i => new { i.TenantId, i.InvoiceNumber }).IsUnique();
+        builder.HasIndex(i => new { i.TenantId, i.OrderId });
+        builder.HasMany(i => i.Lines).WithOne(l => l.Invoice).HasForeignKey(l => l.InvoiceId).OnDelete(DeleteBehavior.Cascade);
+        builder.HasOne(i => i.Order).WithMany().HasForeignKey(i => i.OrderId).OnDelete(DeleteBehavior.NoAction);
+        builder.HasOne(i => i.Customer).WithMany().HasForeignKey(i => i.CustomerId).OnDelete(DeleteBehavior.NoAction);
+    }
+}
+
+public class QuoteLineConfiguration : IEntityTypeConfiguration<QuoteLine>
+{
+    public void Configure(EntityTypeBuilder<QuoteLine> builder)
+    {
+        builder.ToTable("QuoteLines");
+        builder.HasKey(l => l.Id);
+        builder.Property(l => l.Quantity).HasPrecision(18, 4);
+        builder.Property(l => l.UnitPrice).HasPrecision(18, 4);
+        builder.Property(l => l.TaxRate).HasPrecision(5, 2);
+        builder.Property(l => l.Discount).HasPrecision(18, 4);
+        builder.Property(l => l.LineTotal).HasPrecision(18, 4);
+    }
+}
+
+public class InvoiceLineConfiguration : IEntityTypeConfiguration<InvoiceLine>
+{
+    public void Configure(EntityTypeBuilder<InvoiceLine> builder)
+    {
+        builder.ToTable("InvoiceLines");
+        builder.HasKey(l => l.Id);
+        builder.Property(l => l.Description).HasMaxLength(500).IsRequired();
+        builder.Property(l => l.Quantity).HasPrecision(18, 4);
+        builder.Property(l => l.UnitPrice).HasPrecision(18, 4);
+        builder.Property(l => l.TaxRate).HasPrecision(5, 2);
+        builder.Property(l => l.LineTotal).HasPrecision(18, 4);
+    }
+}
+
 public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
 {
     public void Configure(EntityTypeBuilder<Customer> builder)

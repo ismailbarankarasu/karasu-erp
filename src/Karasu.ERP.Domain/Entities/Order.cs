@@ -70,16 +70,7 @@ public class Order : TenantEntity, IAggregateRoot
 
         var previousStatus = Status;
         Status = OrderStatus.Confirmed;
-        StatusHistory.Add(new OrderStatusHistory
-        {
-            Id = Guid.NewGuid(),
-            TenantId = TenantId,
-            OrderId = Id,
-            FromStatus = previousStatus,
-            ToStatus = OrderStatus.Confirmed,
-            ChangedBy = userId,
-            ChangedAt = DateTime.UtcNow
-        });
+        AddStatusHistory(previousStatus, OrderStatus.Confirmed, userId, null);
 
         AddDomainEvent(new OrderConfirmedEvent(Id, TenantId, BranchId, Lines.Select(l => new OrderLineSnapshot(
             l.ProductVariantId, l.Quantity, l.UnitPrice)).ToList()));
@@ -92,16 +83,82 @@ public class Order : TenantEntity, IAggregateRoot
 
         var previousStatus = Status;
         Status = OrderStatus.Cancelled;
+        AddStatusHistory(previousStatus, OrderStatus.Cancelled, userId, reason);
+    }
+
+    public void UpdateDraft(Guid? customerId, string? notes, IEnumerable<(Guid ProductVariantId, decimal Quantity, decimal UnitPrice, decimal TaxRate, decimal Discount)> lines)
+    {
+        if (Status != OrderStatus.Draft)
+            throw new InvalidOperationException("Sadece taslak siparişler güncellenebilir.");
+
+        CustomerId = customerId;
+        Notes = notes;
+
+        var incoming = lines.ToList();
+        var handled = new HashSet<Guid>();
+
+        foreach (var existing in Lines.ToList())
+        {
+            var update = incoming.FirstOrDefault(l => l.ProductVariantId == existing.ProductVariantId);
+            if (update != default)
+            {
+                existing.Quantity = update.Quantity;
+                existing.UnitPrice = update.UnitPrice;
+                existing.TaxRate = update.TaxRate;
+                existing.Discount = update.Discount;
+                existing.LineTotal = (update.Quantity * update.UnitPrice - update.Discount) * (1 + update.TaxRate / 100);
+                existing.IsDeleted = false;
+                handled.Add(update.ProductVariantId);
+            }
+            else
+            {
+                existing.IsDeleted = true;
+                Lines.Remove(existing);
+            }
+        }
+
+        foreach (var line in incoming.Where(l => !handled.Contains(l.ProductVariantId)))
+            AddLine(line.ProductVariantId, line.Quantity, line.UnitPrice, line.TaxRate, line.Discount);
+
+        RecalculateTotals();
+    }
+
+    public void ChangeStatus(OrderStatus newStatus, Guid userId, string? note = null)
+    {
+        if (Status == OrderStatus.Cancelled || Status == OrderStatus.Delivered)
+            throw new InvalidOperationException("Bu siparişin durumu değiştirilemez.");
+
+        if (!IsValidStatusTransition(Status, newStatus))
+            throw new InvalidOperationException($"Sipariş {Status} durumundan {newStatus} durumuna geçemez.");
+
+        var previousStatus = Status;
+        Status = newStatus;
+        AddStatusHistory(previousStatus, newStatus, userId, note);
+    }
+
+    private static bool IsValidStatusTransition(OrderStatus from, OrderStatus to) => (from, to) switch
+    {
+        (OrderStatus.Confirmed, OrderStatus.Preparing) => true,
+        (OrderStatus.Preparing, OrderStatus.Shipping) => true,
+        (OrderStatus.Shipping, OrderStatus.Delivered) => true,
+        (OrderStatus.Confirmed, OrderStatus.Shipping) => true,
+        (OrderStatus.Confirmed, OrderStatus.Delivered) => true,
+        (OrderStatus.Preparing, OrderStatus.Delivered) => true,
+        _ => false
+    };
+
+    private void AddStatusHistory(OrderStatus from, OrderStatus to, Guid userId, string? note)
+    {
         StatusHistory.Add(new OrderStatusHistory
         {
             Id = Guid.NewGuid(),
             TenantId = TenantId,
             OrderId = Id,
-            FromStatus = previousStatus,
-            ToStatus = OrderStatus.Cancelled,
+            FromStatus = from,
+            ToStatus = to,
             ChangedBy = userId,
             ChangedAt = DateTime.UtcNow,
-            Note = reason
+            Note = note
         });
     }
 

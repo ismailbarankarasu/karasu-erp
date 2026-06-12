@@ -26,8 +26,18 @@ public static class AuthorizationPolicyRegistration
 
         Add(Policies.OrderView, "Order.Order.View");
         Add(Policies.OrderCreate, "Order.Order.Create");
+        Add(Policies.OrderUpdate, "Order.Order.Update");
+        Add(Policies.OrderDelete, "Order.Order.Delete");
         Add(Policies.OrderConfirm, "Order.Order.Confirm");
         Add(Policies.OrderCancel, "Order.Order.Cancel");
+
+        Add(Policies.QuoteView, "Quote.Quote.View");
+        Add(Policies.QuoteCreate, "Quote.Quote.Create");
+        Add(Policies.QuoteUpdate, "Quote.Quote.Update");
+        Add(Policies.QuoteConvert, "Quote.Quote.Convert");
+
+        Add(Policies.InvoiceView, "Invoice.Invoice.View");
+        Add(Policies.InvoiceCreate, "Invoice.Invoice.Create");
 
         Add(Policies.StockView, "Stock.Item.View");
         Add(Policies.StockAdjust, "Stock.Item.Adjust");

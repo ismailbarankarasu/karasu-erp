@@ -33,6 +33,10 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<OrderLine> OrderLines => Set<OrderLine>();
     public DbSet<OrderStatusHistory> OrderStatusHistories => Set<OrderStatusHistory>();
+    public DbSet<Quote> Quotes => Set<Quote>();
+    public DbSet<QuoteLine> QuoteLines => Set<QuoteLine>();
+    public DbSet<Invoice> Invoices => Set<Invoice>();
+    public DbSet<InvoiceLine> InvoiceLines => Set<InvoiceLine>();
     public DbSet<Warehouse> Warehouses => Set<Warehouse>();
     public DbSet<StockItem> StockItems => Set<StockItem>();
     public DbSet<StockMovement> StockMovements => Set<StockMovement>();

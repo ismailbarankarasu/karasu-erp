@@ -57,8 +57,16 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
             new Permission { Id = Guid.NewGuid(), Module = "Customer", Entity = "Customer", Action = "Delete", Description = "Delete customers" },
             new Permission { Id = Guid.NewGuid(), Module = "Order", Entity = "Order", Action = "View", Description = "View orders" },
             new Permission { Id = Guid.NewGuid(), Module = "Order", Entity = "Order", Action = "Create", Description = "Create orders" },
+            new Permission { Id = Guid.NewGuid(), Module = "Order", Entity = "Order", Action = "Update", Description = "Update orders" },
+            new Permission { Id = Guid.NewGuid(), Module = "Order", Entity = "Order", Action = "Delete", Description = "Delete orders" },
             new Permission { Id = Guid.NewGuid(), Module = "Order", Entity = "Order", Action = "Confirm", Description = "Confirm orders" },
-            new Permission { Id = Guid.NewGuid(), Module = "Order", Entity = "Order", Action = "Cancel", Description = "Cancel orders" });
+            new Permission { Id = Guid.NewGuid(), Module = "Order", Entity = "Order", Action = "Cancel", Description = "Cancel orders" },
+            new Permission { Id = Guid.NewGuid(), Module = "Quote", Entity = "Quote", Action = "View", Description = "View quotes" },
+            new Permission { Id = Guid.NewGuid(), Module = "Quote", Entity = "Quote", Action = "Create", Description = "Create quotes" },
+            new Permission { Id = Guid.NewGuid(), Module = "Quote", Entity = "Quote", Action = "Update", Description = "Update quotes" },
+            new Permission { Id = Guid.NewGuid(), Module = "Quote", Entity = "Quote", Action = "Convert", Description = "Convert quotes" },
+            new Permission { Id = Guid.NewGuid(), Module = "Invoice", Entity = "Invoice", Action = "View", Description = "View invoices" },
+            new Permission { Id = Guid.NewGuid(), Module = "Invoice", Entity = "Invoice", Action = "Create", Description = "Create invoices" });
         db.SaveChanges();
     }
 }

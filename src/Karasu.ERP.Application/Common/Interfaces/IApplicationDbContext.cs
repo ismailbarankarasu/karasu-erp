@@ -17,6 +17,10 @@ public interface IApplicationDbContext
     DbSet<Order> Orders { get; }
     DbSet<OrderLine> OrderLines { get; }
     DbSet<OrderStatusHistory> OrderStatusHistories { get; }
+    DbSet<Quote> Quotes { get; }
+    DbSet<QuoteLine> QuoteLines { get; }
+    DbSet<Invoice> Invoices { get; }
+    DbSet<InvoiceLine> InvoiceLines { get; }
     DbSet<Warehouse> Warehouses { get; }
     DbSet<StockItem> StockItems { get; }
     DbSet<StockMovement> StockMovements { get; }

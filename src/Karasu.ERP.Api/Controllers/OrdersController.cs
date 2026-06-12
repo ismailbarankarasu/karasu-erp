@@ -1,10 +1,15 @@
 using Karasu.ERP.Api.Authorization;
 using Karasu.ERP.Api.Configuration;
+using Karasu.ERP.Application.Features.Invoices.Commands.CreateInvoiceFromOrder;
 using Karasu.ERP.Application.Features.Orders.Commands.CancelOrder;
+using Karasu.ERP.Application.Features.Orders.Commands.ChangeOrderStatus;
 using Karasu.ERP.Application.Features.Orders.Commands.ConfirmOrder;
 using Karasu.ERP.Application.Features.Orders.Commands.CreateOrder;
+using Karasu.ERP.Application.Features.Orders.Commands.DeleteOrder;
+using Karasu.ERP.Application.Features.Orders.Commands.UpdateOrder;
 using Karasu.ERP.Application.Features.Orders.Queries.GetBranches;
 using Karasu.ERP.Application.Features.Orders.Queries.GetOrderById;
+using Karasu.ERP.Application.Features.Orders.Queries.GetOrderHistory;
 using Karasu.ERP.Application.Features.Orders.Queries.GetOrders;
 using Karasu.ERP.Domain.Enums;
 using MediatR;
@@ -61,6 +66,58 @@ public class OrdersController : ControllerBase
             : BadRequest(WrapError(result.Error!, result.ErrorCode));
     }
 
+    [HttpPut("orders/{id:guid}")]
+    [Authorize(Policy = Policies.OrderUpdate)]
+    public async Task<IActionResult> UpdateOrder(Guid id, [FromBody] UpdateOrderRequest request, CancellationToken ct)
+    {
+        var result = await _mediator.Send(new UpdateOrderCommand(id, request.CustomerId, request.Notes, request.Lines), ct);
+        return result.IsSuccess
+            ? Ok(Wrap(new { message = "Sipariş güncellendi." }))
+            : BadRequest(WrapError(result.Error!, result.ErrorCode));
+    }
+
+    [HttpDelete("orders/{id:guid}")]
+    [Authorize(Policy = Policies.OrderDelete)]
+    public async Task<IActionResult> DeleteOrder(Guid id, CancellationToken ct)
+    {
+        var result = await _mediator.Send(new DeleteOrderCommand(id), ct);
+        return result.IsSuccess
+            ? Ok(Wrap(new { message = "Sipariş silindi." }))
+            : BadRequest(WrapError(result.Error!, result.ErrorCode));
+    }
+
+    [HttpGet("orders/{id:guid}/history")]
+    [Authorize(Policy = Policies.OrderView)]
+    public async Task<IActionResult> GetOrderHistory(Guid id, CancellationToken ct)
+    {
+        var result = await _mediator.Send(new GetOrderHistoryQuery(id), ct);
+        if (!result.IsSuccess) return NotFound(WrapError(result.Error!, result.ErrorCode));
+        return Ok(Wrap(result.Data));
+    }
+
+    [HttpPatch("orders/{id:guid}/status")]
+    [Authorize(Policy = Policies.OrderUpdate)]
+    public async Task<IActionResult> ChangeOrderStatus(Guid id, [FromBody] ChangeOrderStatusRequest request, CancellationToken ct)
+    {
+        var result = await _mediator.Send(new ChangeOrderStatusCommand(id, request.Status, request.Note), ct);
+        return result.IsSuccess
+            ? Ok(Wrap(new { message = "Sipariş durumu güncellendi." }))
+            : BadRequest(WrapError(result.Error!, result.ErrorCode));
+    }
+
+    [HttpPost("orders/{id:guid}/invoice")]
+    [Authorize(Policy = Policies.InvoiceCreate)]
+    public async Task<IActionResult> CreateInvoiceFromOrder(Guid id, [FromBody] CreateInvoiceFromOrderRequest? request, CancellationToken ct)
+    {
+        var result = await _mediator.Send(new CreateInvoiceFromOrderCommand(
+            id,
+            request?.Type ?? InvoiceType.Standard,
+            request?.IssueImmediately ?? false), ct);
+        return result.IsSuccess
+            ? Ok(Wrap(new { id = result.Data }))
+            : BadRequest(WrapError(result.Error!, result.ErrorCode));
+    }
+
     [HttpPost("orders/{id:guid}/confirm")]
     [Authorize(Policy = Policies.OrderConfirm)]
     public async Task<IActionResult> ConfirmOrder(Guid id, CancellationToken ct)
@@ -96,3 +153,12 @@ public class OrdersController : ControllerBase
 }
 
 public record CancelOrderRequest(string? Reason);
+
+public record UpdateOrderRequest(
+    Guid? CustomerId,
+    string? Notes,
+    List<Karasu.ERP.Application.Features.Orders.Commands.CreateOrder.CreateOrderLineDto> Lines);
+
+public record ChangeOrderStatusRequest(OrderStatus Status, string? Note);
+
+public record CreateInvoiceFromOrderRequest(InvoiceType? Type, bool? IssueImmediately);
