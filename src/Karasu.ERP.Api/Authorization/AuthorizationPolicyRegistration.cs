@@ -54,5 +54,8 @@ public static class AuthorizationPolicyRegistration
         Add(Policies.PosSessionView, "Pos.Session.View");
         Add(Policies.PosSaleSell, "Pos.Sale.Sell");
         Add(Policies.PosSaleReturn, "Pos.Sale.Return");
+
+        Add(Policies.FinanceView, "Finance.Account.View");
+        Add(Policies.FinanceCreate, "Finance.Account.Create");
     }
 }

@@ -74,4 +74,7 @@ public static class Policies
     public const string PosSessionView = "Pos.Session.View";
     public const string PosSaleSell = "Pos.Sale.Sell";
     public const string PosSaleReturn = "Pos.Sale.Return";
+
+    public const string FinanceView = "Finance.View";
+    public const string FinanceCreate = "Finance.Create";
 }

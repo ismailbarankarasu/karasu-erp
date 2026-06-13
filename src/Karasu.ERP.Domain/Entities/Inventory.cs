@@ -47,6 +47,40 @@ public class StockItem : TenantEntity
         Quantity += amount;
     }
 
+    public void Reserve(decimal amount)
+    {
+        if (amount <= 0)
+            throw new ArgumentOutOfRangeException(nameof(amount), "Miktar sıfırdan büyük olmalıdır.");
+
+        if (AvailableQuantity < amount)
+            throw new InvalidOperationException("Yetersiz stok.");
+
+        ReservedQuantity += amount;
+    }
+
+    public void ReleaseReservation(decimal amount)
+    {
+        if (amount <= 0)
+            throw new ArgumentOutOfRangeException(nameof(amount), "Miktar sıfırdan büyük olmalıdır.");
+
+        if (ReservedQuantity < amount)
+            throw new InvalidOperationException("Yetersiz rezervasyon.");
+
+        ReservedQuantity -= amount;
+    }
+
+    public void FulfillReservation(decimal amount)
+    {
+        if (amount <= 0)
+            throw new ArgumentOutOfRangeException(nameof(amount), "Miktar sıfırdan büyük olmalıdır.");
+
+        if (ReservedQuantity < amount)
+            throw new InvalidOperationException("Yetersiz rezervasyon.");
+
+        ReservedQuantity -= amount;
+        Quantity -= amount;
+    }
+
     public void Adjust(decimal delta)
     {
         if (delta == 0)

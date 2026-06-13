@@ -16,7 +16,19 @@ public interface IStockService
         decimal minStock,
         CancellationToken ct);
 
+    Task<Result> ReserveForOrderAsync(
+        Guid warehouseId,
+        Guid orderId,
+        IReadOnlyList<StockOrderLine> lines,
+        CancellationToken ct);
+
     Task<Result> DeductForOrderAsync(
+        Guid warehouseId,
+        Guid orderId,
+        IReadOnlyList<StockOrderLine> lines,
+        CancellationToken ct);
+
+    Task<Result> ReleaseForOrderAsync(
         Guid warehouseId,
         Guid orderId,
         IReadOnlyList<StockOrderLine> lines,

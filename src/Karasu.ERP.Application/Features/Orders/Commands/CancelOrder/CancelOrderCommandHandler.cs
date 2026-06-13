@@ -62,6 +62,11 @@ public class CancelOrderCommandHandler : IRequestHandler<CancelOrderCommand, Res
                 .Select(l => new StockOrderLine(l.ProductVariantId, l.Quantity))
                 .ToList();
 
+            var releaseResult = await _stockService.ReleaseForOrderAsync(
+                warehouseId.Value, orderSnapshot.Id, stockLines, cancellationToken);
+            if (!releaseResult.IsSuccess)
+                return releaseResult;
+
             var stockResult = await _stockService.RestoreForOrderAsync(
                 warehouseId.Value, orderSnapshot.Id, stockLines, cancellationToken);
             if (!stockResult.IsSuccess)

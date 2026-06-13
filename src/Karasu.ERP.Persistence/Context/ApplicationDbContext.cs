@@ -47,6 +47,17 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
     public DbSet<PosSession> PosSessions => Set<PosSession>();
     public DbSet<PosTransaction> PosTransactions => Set<PosTransaction>();
     public DbSet<PosReturn> PosReturns => Set<PosReturn>();
+    public DbSet<CashRegister> CashRegisters => Set<CashRegister>();
+    public DbSet<CashTransaction> CashTransactions => Set<CashTransaction>();
+    public DbSet<BankAccount> BankAccounts => Set<BankAccount>();
+    public DbSet<BankTransaction> BankTransactions => Set<BankTransaction>();
+    public DbSet<ExpenseCategory> ExpenseCategories => Set<ExpenseCategory>();
+    public DbSet<Expense> Expenses => Set<Expense>();
+    public DbSet<IncomeCategory> IncomeCategories => Set<IncomeCategory>();
+    public DbSet<Income> Incomes => Set<Income>();
+    public DbSet<Receivable> Receivables => Set<Receivable>();
+    public DbSet<Payable> Payables => Set<Payable>();
+    public DbSet<FinancePayment> FinancePayments => Set<FinancePayment>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<Permission> Permissions => Set<Permission>();

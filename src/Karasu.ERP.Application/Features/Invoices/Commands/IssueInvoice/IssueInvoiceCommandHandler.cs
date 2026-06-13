@@ -1,4 +1,5 @@
 using Karasu.ERP.Application.Common.Interfaces;
+using Karasu.ERP.Application.Features.Finance.Services;
 using Karasu.ERP.Shared.Models;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -39,6 +40,8 @@ public class IssueInvoiceCommandHandler : IRequestHandler<IssueInvoiceCommand, R
         {
             return Result.Failure(ex.Message, "INVOICE_INVALID_STATUS");
         }
+
+        await FinanceReceivableService.CreateForIssuedInvoiceAsync(_context, invoice, cancellationToken);
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         return Result.Success();

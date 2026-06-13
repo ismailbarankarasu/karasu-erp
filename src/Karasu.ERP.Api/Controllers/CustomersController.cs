@@ -1,9 +1,12 @@
 using Karasu.ERP.Api.Authorization;
 using Karasu.ERP.Api.Configuration;
+using Karasu.ERP.Application.Features.Customers.Commands.AddCustomerNote;
 using Karasu.ERP.Application.Features.Customers.Commands.CreateCustomer;
 using Karasu.ERP.Application.Features.Customers.Commands.DeleteCustomer;
 using Karasu.ERP.Application.Features.Customers.Commands.UpdateCustomer;
 using Karasu.ERP.Application.Features.Customers.Queries.GetCustomerById;
+using Karasu.ERP.Application.Features.Customers.Queries.GetCustomerNotes;
+using Karasu.ERP.Application.Features.Customers.Queries.GetCustomerPaymentHistory;
 using Karasu.ERP.Application.Features.Customers.Queries.GetCustomers;
 using Karasu.ERP.Domain.Enums;
 using MediatR;
@@ -87,6 +90,33 @@ public class CustomersController : ControllerBase
         return Ok(Wrap(new { message = "Müşteri silindi." }));
     }
 
+    [HttpGet("customers/{id:guid}/notes")]
+    [Authorize(Policy = Policies.CustomerView)]
+    public async Task<IActionResult> GetCustomerNotes(Guid id, CancellationToken ct)
+    {
+        var result = await _mediator.Send(new GetCustomerNotesQuery(id), ct);
+        if (!result.IsSuccess) return NotFound(WrapError(result.Error!, result.ErrorCode));
+        return Ok(Wrap(result.Data));
+    }
+
+    [HttpPost("customers/{id:guid}/notes")]
+    [Authorize(Policy = Policies.CustomerUpdate)]
+    public async Task<IActionResult> AddCustomerNote(Guid id, [FromBody] AddCustomerNoteRequest request, CancellationToken ct)
+    {
+        var result = await _mediator.Send(new AddCustomerNoteCommand(id, request.Content), ct);
+        if (!result.IsSuccess) return BadRequest(WrapError(result.Error!, result.ErrorCode));
+        return Ok(Wrap(new { id = result.Data }));
+    }
+
+    [HttpGet("customers/{id:guid}/payments")]
+    [Authorize(Policy = Policies.CustomerView)]
+    public async Task<IActionResult> GetCustomerPaymentHistory(Guid id, CancellationToken ct)
+    {
+        var result = await _mediator.Send(new GetCustomerPaymentHistoryQuery(id), ct);
+        if (!result.IsSuccess) return NotFound(WrapError(result.Error!, result.ErrorCode));
+        return Ok(Wrap(result.Data));
+    }
+
     private static object Wrap<T>(T data) => new { success = true, data, errors = (object?)null };
 
     private static object WrapError(string message, string? code) =>
@@ -104,3 +134,5 @@ public record UpdateCustomerRequest(
     string? City,
     decimal CreditLimit,
     CustomerStatus Status);
+
+public record AddCustomerNoteRequest(string Content);

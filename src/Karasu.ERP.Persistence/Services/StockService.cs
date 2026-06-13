@@ -117,6 +117,39 @@ public class StockService : IStockService
         return Result.Success();
     }
 
+    public async Task<Result> ReserveForOrderAsync(
+        Guid warehouseId,
+        Guid orderId,
+        IReadOnlyList<StockOrderLine> lines,
+        CancellationToken ct)
+    {
+        if (lines.Count == 0)
+            return Result.Success();
+
+        var variantIds = lines.Select(l => l.ProductVariantId).Distinct().ToList();
+
+        var stockItems = await _context.StockItems
+            .Where(s => s.WarehouseId == warehouseId && variantIds.Contains(s.ProductVariantId))
+            .ToDictionaryAsync(s => s.ProductVariantId, ct);
+
+        foreach (var line in lines)
+        {
+            if (!stockItems.TryGetValue(line.ProductVariantId, out var stockItem))
+                return Result.Failure("Stok kaydı bulunamadı.", "STOCK_ITEM_NOT_FOUND");
+
+            try
+            {
+                stockItem.Reserve(line.Quantity);
+            }
+            catch (InvalidOperationException)
+            {
+                return Result.Failure("Yetersiz stok.", "INSUFFICIENT_STOCK");
+            }
+        }
+
+        return Result.Success();
+    }
+
     public async Task<Result> DeductForOrderAsync(
         Guid warehouseId,
         Guid orderId,
@@ -139,7 +172,10 @@ public class StockService : IStockService
 
             try
             {
-                stockItem.Deduct(line.Quantity);
+                if (stockItem.ReservedQuantity >= line.Quantity)
+                    stockItem.FulfillReservation(line.Quantity);
+                else
+                    stockItem.Deduct(line.Quantity);
             }
             catch (InvalidOperationException)
             {
@@ -158,6 +194,43 @@ public class StockService : IStockService
                 Note = "Sipariş onayı",
                 CreatedAt = DateTime.UtcNow
             }, ct);
+        }
+
+        return Result.Success();
+    }
+
+    public async Task<Result> ReleaseForOrderAsync(
+        Guid warehouseId,
+        Guid orderId,
+        IReadOnlyList<StockOrderLine> lines,
+        CancellationToken ct)
+    {
+        if (lines.Count == 0)
+            return Result.Success();
+
+        var variantIds = lines.Select(l => l.ProductVariantId).Distinct().ToList();
+
+        var stockItems = await _context.StockItems
+            .Where(s => s.WarehouseId == warehouseId && variantIds.Contains(s.ProductVariantId))
+            .ToDictionaryAsync(s => s.ProductVariantId, ct);
+
+        foreach (var line in lines)
+        {
+            if (!stockItems.TryGetValue(line.ProductVariantId, out var stockItem))
+                return Result.Failure("Stok kaydı bulunamadı.", "STOCK_ITEM_NOT_FOUND");
+
+            var releaseAmount = Math.Min(line.Quantity, stockItem.ReservedQuantity);
+            if (releaseAmount <= 0)
+                continue;
+
+            try
+            {
+                stockItem.ReleaseReservation(releaseAmount);
+            }
+            catch (InvalidOperationException)
+            {
+                return Result.Failure("Yetersiz rezervasyon.", "INSUFFICIENT_RESERVATION");
+            }
         }
 
         return Result.Success();

@@ -1,4 +1,5 @@
 using Karasu.ERP.Application.Common.Interfaces;
+using Karasu.ERP.Application.Features.Finance.Services;
 using Karasu.ERP.Domain.Entities;
 using Karasu.ERP.Domain.Enums;
 using Karasu.ERP.Shared.Models;
@@ -80,6 +81,8 @@ public class CreateInvoiceFromOrderCommandHandler : IRequestHandler<CreateInvoic
             {
                 return Result<Guid>.Failure(ex.Message, "INVOICE_INVALID_STATUS");
             }
+
+            await FinanceReceivableService.CreateForIssuedInvoiceAsync(_context, invoice, cancellationToken);
         }
 
         await _context.Invoices.AddAsync(invoice, cancellationToken);

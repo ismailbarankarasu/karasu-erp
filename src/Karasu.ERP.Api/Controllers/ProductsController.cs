@@ -1,5 +1,7 @@
 using Karasu.ERP.Api.Authorization;
 using Karasu.ERP.Api.Configuration;
+using Karasu.ERP.Application.Features.Products.Commands.CreateBrand;
+using Karasu.ERP.Application.Features.Products.Commands.CreateCategory;
 using Karasu.ERP.Application.Features.Products.Commands.CreateProduct;
 using Karasu.ERP.Application.Features.Products.Commands.DeleteProduct;
 using Karasu.ERP.Application.Features.Products.Commands.UpdateProduct;
@@ -109,12 +111,32 @@ public class ProductsController : ControllerBase
         return result.IsSuccess ? Ok(Wrap(result.Data)) : BadRequest(WrapError(result.Error!, result.ErrorCode));
     }
 
+    [HttpPost("categories")]
+    [Authorize(Policy = Policies.ProductCreate)]
+    public async Task<IActionResult> CreateCategory([FromBody] CreateCategoryCommand command, CancellationToken ct)
+    {
+        var result = await _mediator.Send(command, ct);
+        return result.IsSuccess
+            ? Ok(Wrap(new { id = result.Data }))
+            : BadRequest(WrapError(result.Error!, result.ErrorCode));
+    }
+
     [HttpGet("brands")]
     [Authorize(Policy = Policies.ProductView)]
     public async Task<IActionResult> GetBrands(CancellationToken ct)
     {
         var result = await _mediator.Send(new GetBrandsQuery(), ct);
         return result.IsSuccess ? Ok(Wrap(result.Data)) : BadRequest(WrapError(result.Error!, result.ErrorCode));
+    }
+
+    [HttpPost("brands")]
+    [Authorize(Policy = Policies.ProductCreate)]
+    public async Task<IActionResult> CreateBrand([FromBody] CreateBrandCommand command, CancellationToken ct)
+    {
+        var result = await _mediator.Send(command, ct);
+        return result.IsSuccess
+            ? Ok(Wrap(new { id = result.Data }))
+            : BadRequest(WrapError(result.Error!, result.ErrorCode));
     }
 
     [HttpGet("units")]

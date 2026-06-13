@@ -360,3 +360,154 @@ public class PosReturnConfiguration : IEntityTypeConfiguration<PosReturn>
             .OnDelete(DeleteBehavior.NoAction);
     }
 }
+
+public class CashRegisterConfiguration : IEntityTypeConfiguration<CashRegister>
+{
+    public void Configure(EntityTypeBuilder<CashRegister> builder)
+    {
+        builder.ToTable("CashRegisters");
+        builder.HasKey(c => c.Id);
+        builder.Property(c => c.Name).HasMaxLength(100).IsRequired();
+        builder.Property(c => c.CurrentBalance).HasPrecision(18, 4);
+        builder.HasIndex(c => new { c.TenantId, c.BranchId, c.Name });
+        builder.HasOne(c => c.Branch).WithMany().HasForeignKey(c => c.BranchId).OnDelete(DeleteBehavior.NoAction);
+    }
+}
+
+public class CashTransactionConfiguration : IEntityTypeConfiguration<CashTransaction>
+{
+    public void Configure(EntityTypeBuilder<CashTransaction> builder)
+    {
+        builder.ToTable("CashTransactions");
+        builder.HasKey(t => t.Id);
+        builder.Property(t => t.Amount).HasPrecision(18, 4);
+        builder.Property(t => t.Description).HasMaxLength(500);
+        builder.HasIndex(t => new { t.TenantId, t.CashRegisterId, t.CreatedAt });
+        builder.HasOne(t => t.CashRegister).WithMany(c => c.Transactions).HasForeignKey(t => t.CashRegisterId)
+            .OnDelete(DeleteBehavior.NoAction);
+    }
+}
+
+public class BankAccountConfiguration : IEntityTypeConfiguration<BankAccount>
+{
+    public void Configure(EntityTypeBuilder<BankAccount> builder)
+    {
+        builder.ToTable("BankAccounts");
+        builder.HasKey(b => b.Id);
+        builder.Property(b => b.BankName).HasMaxLength(100).IsRequired();
+        builder.Property(b => b.AccountName).HasMaxLength(100).IsRequired();
+        builder.Property(b => b.Iban).HasMaxLength(34);
+        builder.Property(b => b.CurrentBalance).HasPrecision(18, 4);
+        builder.HasIndex(b => new { b.TenantId, b.BankName, b.AccountName });
+    }
+}
+
+public class BankTransactionConfiguration : IEntityTypeConfiguration<BankTransaction>
+{
+    public void Configure(EntityTypeBuilder<BankTransaction> builder)
+    {
+        builder.ToTable("BankTransactions");
+        builder.HasKey(t => t.Id);
+        builder.Property(t => t.Amount).HasPrecision(18, 4);
+        builder.Property(t => t.Description).HasMaxLength(500);
+        builder.Property(t => t.ReferenceNo).HasMaxLength(100);
+        builder.HasIndex(t => new { t.TenantId, t.BankAccountId, t.CreatedAt });
+        builder.HasOne(t => t.BankAccount).WithMany(b => b.Transactions).HasForeignKey(t => t.BankAccountId)
+            .OnDelete(DeleteBehavior.NoAction);
+    }
+}
+
+public class ExpenseCategoryConfiguration : IEntityTypeConfiguration<ExpenseCategory>
+{
+    public void Configure(EntityTypeBuilder<ExpenseCategory> builder)
+    {
+        builder.ToTable("ExpenseCategories");
+        builder.HasKey(c => c.Id);
+        builder.Property(c => c.Name).HasMaxLength(100).IsRequired();
+        builder.HasIndex(c => new { c.TenantId, c.Name });
+        builder.HasOne(c => c.Parent).WithMany(c => c.Children).HasForeignKey(c => c.ParentId)
+            .OnDelete(DeleteBehavior.NoAction);
+    }
+}
+
+public class ExpenseConfiguration : IEntityTypeConfiguration<Expense>
+{
+    public void Configure(EntityTypeBuilder<Expense> builder)
+    {
+        builder.ToTable("Expenses");
+        builder.HasKey(e => e.Id);
+        builder.Property(e => e.Amount).HasPrecision(18, 4);
+        builder.Property(e => e.Description).HasMaxLength(500).IsRequired();
+        builder.HasIndex(e => new { e.TenantId, e.ExpenseDate });
+        builder.HasOne(e => e.Category).WithMany().HasForeignKey(e => e.CategoryId).OnDelete(DeleteBehavior.NoAction);
+    }
+}
+
+public class IncomeCategoryConfiguration : IEntityTypeConfiguration<IncomeCategory>
+{
+    public void Configure(EntityTypeBuilder<IncomeCategory> builder)
+    {
+        builder.ToTable("IncomeCategories");
+        builder.HasKey(c => c.Id);
+        builder.Property(c => c.Name).HasMaxLength(100).IsRequired();
+        builder.HasIndex(c => new { c.TenantId, c.Name });
+        builder.HasOne(c => c.Parent).WithMany(c => c.Children).HasForeignKey(c => c.ParentId)
+            .OnDelete(DeleteBehavior.NoAction);
+    }
+}
+
+public class IncomeConfiguration : IEntityTypeConfiguration<Income>
+{
+    public void Configure(EntityTypeBuilder<Income> builder)
+    {
+        builder.ToTable("Incomes");
+        builder.HasKey(i => i.Id);
+        builder.Property(i => i.Amount).HasPrecision(18, 4);
+        builder.Property(i => i.Description).HasMaxLength(500).IsRequired();
+        builder.Property(i => i.Source).HasMaxLength(200);
+        builder.HasIndex(i => new { i.TenantId, i.IncomeDate });
+        builder.HasOne(i => i.Category).WithMany().HasForeignKey(i => i.CategoryId).OnDelete(DeleteBehavior.NoAction);
+    }
+}
+
+public class ReceivableConfiguration : IEntityTypeConfiguration<Receivable>
+{
+    public void Configure(EntityTypeBuilder<Receivable> builder)
+    {
+        builder.ToTable("Receivables");
+        builder.HasKey(r => r.Id);
+        builder.Property(r => r.Amount).HasPrecision(18, 4);
+        builder.Property(r => r.PaidAmount).HasPrecision(18, 4);
+        builder.HasIndex(r => new { r.TenantId, r.CustomerId, r.Status });
+        builder.HasOne(r => r.Customer).WithMany().HasForeignKey(r => r.CustomerId).OnDelete(DeleteBehavior.NoAction);
+    }
+}
+
+public class PayableConfiguration : IEntityTypeConfiguration<Payable>
+{
+    public void Configure(EntityTypeBuilder<Payable> builder)
+    {
+        builder.ToTable("Payables");
+        builder.HasKey(p => p.Id);
+        builder.Property(p => p.CreditorName).HasMaxLength(200).IsRequired();
+        builder.Property(p => p.Amount).HasPrecision(18, 4);
+        builder.Property(p => p.PaidAmount).HasPrecision(18, 4);
+        builder.HasIndex(p => new { p.TenantId, p.Status, p.DueDate });
+    }
+}
+
+public class FinancePaymentConfiguration : IEntityTypeConfiguration<FinancePayment>
+{
+    public void Configure(EntityTypeBuilder<FinancePayment> builder)
+    {
+        builder.ToTable("FinancePayments");
+        builder.HasKey(p => p.Id);
+        builder.Property(p => p.Amount).HasPrecision(18, 4);
+        builder.Property(p => p.ReferenceNo).HasMaxLength(100);
+        builder.Property(p => p.Note).HasMaxLength(500);
+        builder.HasIndex(p => new { p.TenantId, p.CustomerId, p.PaidAt });
+        builder.HasOne(p => p.Customer).WithMany().HasForeignKey(p => p.CustomerId).OnDelete(DeleteBehavior.NoAction);
+        builder.HasOne(p => p.Receivable).WithMany().HasForeignKey(p => p.ReceivableId).OnDelete(DeleteBehavior.NoAction);
+        builder.HasOne(p => p.Payable).WithMany().HasForeignKey(p => p.PayableId).OnDelete(DeleteBehavior.NoAction);
+    }
+}

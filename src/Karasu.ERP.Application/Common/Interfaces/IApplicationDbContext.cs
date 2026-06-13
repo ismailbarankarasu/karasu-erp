@@ -31,6 +31,17 @@ public interface IApplicationDbContext
     DbSet<PosSession> PosSessions { get; }
     DbSet<PosTransaction> PosTransactions { get; }
     DbSet<PosReturn> PosReturns { get; }
+    DbSet<CashRegister> CashRegisters { get; }
+    DbSet<CashTransaction> CashTransactions { get; }
+    DbSet<BankAccount> BankAccounts { get; }
+    DbSet<BankTransaction> BankTransactions { get; }
+    DbSet<ExpenseCategory> ExpenseCategories { get; }
+    DbSet<Expense> Expenses { get; }
+    DbSet<IncomeCategory> IncomeCategories { get; }
+    DbSet<Income> Incomes { get; }
+    DbSet<Receivable> Receivables { get; }
+    DbSet<Payable> Payables { get; }
+    DbSet<FinancePayment> FinancePayments { get; }
     DbSet<AuditLog> AuditLogs { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);

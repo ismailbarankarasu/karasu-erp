@@ -15,3 +15,8 @@ public enum StockCountStatus { InProgress, Completed, Cancelled }
 public enum QuoteStatus { Draft, Sent, Accepted, Rejected, Converted, Expired, Cancelled }
 public enum InvoiceType { Standard, EInvoice, EArchive }
 public enum InvoiceStatus { Draft, Issued, Paid, Cancelled }
+public enum CashTransactionType { In, Out }
+public enum BankTransactionType { In, Out }
+public enum ReceivableStatus { Open, PartiallyPaid, Paid, Overdue, Cancelled }
+public enum PayableStatus { Open, PartiallyPaid, Paid, Overdue, Cancelled }
+public enum FinancePaymentDirection { Collection, Disbursement }

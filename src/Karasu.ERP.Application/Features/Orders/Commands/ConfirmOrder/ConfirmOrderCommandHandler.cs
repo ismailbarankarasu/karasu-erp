@@ -61,6 +61,11 @@ public class ConfirmOrderCommandHandler : IRequestHandler<ConfirmOrderCommand, R
             .Select(l => new StockOrderLine(l.ProductVariantId, l.Quantity))
             .ToList();
 
+        var reserveResult = await _stockService.ReserveForOrderAsync(
+            warehouseId.Value, orderSnapshot.Id, stockLines, cancellationToken);
+        if (!reserveResult.IsSuccess)
+            return reserveResult;
+
         var stockResult = await _stockService.DeductForOrderAsync(
             warehouseId.Value, orderSnapshot.Id, stockLines, cancellationToken);
         if (!stockResult.IsSuccess)
