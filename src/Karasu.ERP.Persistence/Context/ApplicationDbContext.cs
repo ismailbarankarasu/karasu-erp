@@ -72,6 +72,12 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
     public DbSet<InboxMessage> InboxMessages => Set<InboxMessage>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+    public DbSet<DailySalesSummary> DailySalesSummaries => Set<DailySalesSummary>();
+    public DbSet<ProductSalesRanking> ProductSalesRankings => Set<ProductSalesRanking>();
+    public DbSet<BranchPerformanceSnapshot> BranchPerformanceSnapshots => Set<BranchPerformanceSnapshot>();
+    public DbSet<StockAlertView> StockAlertViews => Set<StockAlertView>();
+    public DbSet<CustomerAttachment> CustomerAttachments => Set<CustomerAttachment>();
+    public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<Permission> Permissions => Set<Permission>();
     public DbSet<RolePermission> RolePermissions => Set<RolePermission>();

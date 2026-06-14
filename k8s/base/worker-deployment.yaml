@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: karasu-worker
+  namespace: karasu-erp
+  labels:
+    app: karasu-worker
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: karasu-worker
+  template:
+    metadata:
+      labels:
+        app: karasu-worker
+    spec:
+      containers:
+        - name: worker
+          image: ghcr.io/karasu/erp-api:latest
+          envFrom:
+            - configMapRef:
+                name: karasu-api-config
+          env:
+            - name: ConnectionStrings__DefaultConnection
+              valueFrom:
+                secretKeyRef:
+                  name: karasu-secrets
+                  key: db-connection
+            - name: ConnectionStrings__Redis
+              valueFrom:
+                secretKeyRef:
+                  name: karasu-secrets
+                  key: redis-connection
+            - name: DISABLE_SIGNALR_HUB
+              value: "true"
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi

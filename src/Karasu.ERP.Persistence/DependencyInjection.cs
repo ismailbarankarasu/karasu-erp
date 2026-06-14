@@ -1,10 +1,11 @@
-using Karasu.ERP.Application.Common.Interfaces;
-using Karasu.ERP.Domain.Entities;
-using Karasu.ERP.Identity.Entities;
+using Karasu.ERP.Persistence.Configuration;
 using Karasu.ERP.Persistence.Context;
 using Karasu.ERP.Persistence.Interceptors;
 using Karasu.ERP.Persistence.Repositories;
 using Karasu.ERP.Persistence.Services;
+using Karasu.ERP.Application.Common.Interfaces;
+using Karasu.ERP.Domain.Entities;
+using Karasu.ERP.Identity.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -16,8 +17,12 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddPersistence(this IServiceCollection services, IConfiguration configuration)
     {
-        var connectionString = configuration.GetConnectionString("DefaultConnection");
+        var databaseOptions = configuration.GetSection(DatabaseOptions.SectionName).Get<DatabaseOptions>() ?? new DatabaseOptions();
+        var connectionString = databaseOptions.ConnectionString
+            ?? configuration.GetConnectionString("DefaultConnection");
         var useInMemory = configuration.GetValue<bool>("UseInMemoryDatabase");
+
+        services.Configure<DatabaseOptions>(configuration.GetSection(DatabaseOptions.SectionName));
 
         services.AddScoped<AuditSaveChangesInterceptor>();
 
@@ -29,12 +34,10 @@ public static class DependencyInjection
             }
             else
             {
-                options.UseSqlServer(connectionString, b =>
-                {
-                    b.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName);
-                    b.EnableRetryOnFailure(3);
-                });
+                ConfigureProvider(options, databaseOptions.Provider, connectionString!);
             }
+
+            options.EnableSensitiveDataLogging(configuration.GetValue("Database:EnableSensitiveDataLogging", false));
 
             if (!useInMemory)
                 options.AddInterceptors(sp.GetRequiredService<AuditSaveChangesInterceptor>());
@@ -56,6 +59,7 @@ public static class DependencyInjection
 
         services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<ApplicationDbContext>());
         services.AddScoped<IIdentityService, IdentityService>();
+        services.AddScoped<IUserManagementService, UserManagementService>();
         services.AddScoped<IOrderRepository, OrderRepository>();
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<ICustomerRepository, CustomerRepository>();
@@ -65,5 +69,32 @@ public static class DependencyInjection
         services.AddScoped<IStockService, StockService>();
 
         return services;
+    }
+
+    private static void ConfigureProvider(
+        DbContextOptionsBuilder options,
+        DatabaseProvider provider,
+        string connectionString)
+    {
+        switch (provider)
+        {
+            case DatabaseProvider.PostgreSQL:
+                options.UseNpgsql(connectionString, b =>
+                {
+                    b.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName);
+                    b.EnableRetryOnFailure(3);
+                    b.CommandTimeout(30);
+                });
+                break;
+            case DatabaseProvider.SqlServer:
+            default:
+                options.UseSqlServer(connectionString, b =>
+                {
+                    b.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName);
+                    b.EnableRetryOnFailure(3);
+                    b.CommandTimeout(30);
+                });
+                break;
+        }
     }
 }

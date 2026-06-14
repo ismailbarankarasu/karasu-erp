@@ -56,6 +56,11 @@ public interface IApplicationDbContext
     DbSet<OutboxMessage> OutboxMessages { get; }
     DbSet<InboxMessage> InboxMessages { get; }
     DbSet<AuditLog> AuditLogs { get; }
+    DbSet<DailySalesSummary> DailySalesSummaries { get; }
+    DbSet<ProductSalesRanking> ProductSalesRankings { get; }
+    DbSet<BranchPerformanceSnapshot> BranchPerformanceSnapshots { get; }
+    DbSet<StockAlertView> StockAlertViews { get; }
+    DbSet<CustomerAttachment> CustomerAttachments { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
     void MarkUnchanged<T>(T entity) where T : class;

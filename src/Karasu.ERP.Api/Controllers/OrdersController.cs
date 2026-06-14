@@ -7,7 +7,6 @@ using Karasu.ERP.Application.Features.Orders.Commands.ConfirmOrder;
 using Karasu.ERP.Application.Features.Orders.Commands.CreateOrder;
 using Karasu.ERP.Application.Features.Orders.Commands.DeleteOrder;
 using Karasu.ERP.Application.Features.Orders.Commands.UpdateOrder;
-using Karasu.ERP.Application.Features.Orders.Queries.GetBranches;
 using Karasu.ERP.Application.Features.Orders.Queries.GetOrderById;
 using Karasu.ERP.Application.Features.Orders.Queries.GetOrderHistory;
 using Karasu.ERP.Application.Features.Orders.Queries.GetOrders;
@@ -136,14 +135,6 @@ public class OrdersController : ControllerBase
         return result.IsSuccess
             ? Ok(Wrap(new { message = "Sipariş iptal edildi." }))
             : BadRequest(WrapError(result.Error!, result.ErrorCode));
-    }
-
-    [HttpGet("branches")]
-    [Authorize(Policy = Policies.OrderView)]
-    public async Task<IActionResult> GetBranches(CancellationToken ct)
-    {
-        var result = await _mediator.Send(new GetBranchesQuery(), ct);
-        return result.IsSuccess ? Ok(Wrap(result.Data)) : BadRequest(WrapError(result.Error!, result.ErrorCode));
     }
 
     private static object Wrap<T>(T data) => new { success = true, data, errors = (object?)null };

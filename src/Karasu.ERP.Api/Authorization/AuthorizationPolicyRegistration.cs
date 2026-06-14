@@ -83,5 +83,15 @@ public static class AuthorizationPolicyRegistration
         Add(Policies.EInvoiceView, "EInvoice.Profile.View");
         Add(Policies.EInvoiceConfigure, "EInvoice.Profile.Configure");
         Add(Policies.EInvoiceSubmit, "EInvoice.Submission.Submit");
+
+        Add(Policies.BranchView, "Branch.Branch.View");
+        Add(Policies.BranchCreate, "Branch.Branch.Create");
+        Add(Policies.BranchUpdate, "Branch.Branch.Update");
+        Add(Policies.BranchDelete, "Branch.Branch.Delete");
+
+        Add(Policies.UserView, "User.User.View");
+        Add(Policies.UserCreate, "User.User.Create");
+        Add(Policies.UserUpdate, "User.User.Update");
+        Add(Policies.UserDelete, "User.User.Delete");
     }
 }

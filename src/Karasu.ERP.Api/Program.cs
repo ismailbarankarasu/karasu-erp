@@ -1,5 +1,4 @@
 using System.Text;
-using FluentValidation;
 using Karasu.ERP.Api.Authorization;
 using Karasu.ERP.Api.Configuration;
 using Karasu.ERP.Api.Middleware;
@@ -9,6 +8,7 @@ using Karasu.ERP.Identity.Options;
 using Karasu.ERP.Infrastructure;
 using Karasu.ERP.Infrastructure.Services;
 using Karasu.ERP.Persistence;
+using Karasu.ERP.Persistence.Configuration;
 using Karasu.ERP.Persistence.Seed;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -67,41 +67,23 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization(options => options.AddPermissionPolicies());
 builder.Services.AddSingleton<IAuthorizationHandler, PermissionAuthorizationHandler>();
 builder.Services.AddApiRateLimiting(builder.Configuration);
+builder.Services.AddApiPerformance();
 builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options =>
-{
-    options.SwaggerDoc("v1", new() { Title = "Karasu ERP API", Version = "v1" });
-    options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
-    {
-        Name = "Authorization",
-        Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
-        Scheme = "Bearer",
-        BearerFormat = "JWT",
-        In = Microsoft.OpenApi.Models.ParameterLocation.Header
-    });
-    options.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
-    {
-        {
-            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
-            {
-                Reference = new Microsoft.OpenApi.Models.OpenApiReference
-                {
-                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            Array.Empty<string>()
-        }
-    });
-});
+builder.Services.AddApiSwagger(builder.Configuration);
 
 var redisConnection = builder.Configuration.GetConnectionString("Redis");
+var databaseOptions = builder.Configuration.GetSection(DatabaseOptions.SectionName).Get<DatabaseOptions>() ?? new DatabaseOptions();
+var dbConnection = databaseOptions.ConnectionString ?? builder.Configuration.GetConnectionString("DefaultConnection");
 
 var healthChecksBuilder = builder.Services.AddHealthChecks();
 
-if (!builder.Environment.IsEnvironment("Testing"))
-    healthChecksBuilder.AddSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")!);
+if (!builder.Environment.IsEnvironment("Testing") && !string.IsNullOrEmpty(dbConnection))
+{
+    if (databaseOptions.Provider == DatabaseProvider.PostgreSQL)
+        healthChecksBuilder.AddNpgSql(dbConnection);
+    else
+        healthChecksBuilder.AddSqlServer(dbConnection);
+}
 
 if (!string.IsNullOrEmpty(redisConnection) && !builder.Environment.IsEnvironment("Testing"))
     healthChecksBuilder.AddRedis(redisConnection);
@@ -117,13 +99,11 @@ var app = builder.Build();
 if (!app.Environment.IsEnvironment("Testing"))
     await DatabaseSeeder.SeedAsync(app.Services);
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseApiSwagger();
 
+app.UseResponseCompression();
 app.UseSerilogRequestLogging();
+app.UseMiddleware<SecurityHeadersMiddleware>();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseRateLimiter();
 app.UseHttpsRedirection();

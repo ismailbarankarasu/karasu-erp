@@ -1,0 +1,82 @@
+trigger:
+  branches:
+    include:
+      - master
+      - develop
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  buildConfiguration: Release
+  imageRepository: karasu/erp-api
+  containerRegistry: karasuacr.azurecr.io
+  dockerfilePath: docker/Dockerfile.api
+
+stages:
+  - stage: Build
+    displayName: Build and Test
+    jobs:
+      - job: BuildTest
+        steps:
+          - task: UseDotNet@2
+            inputs:
+              packageType: sdk
+              version: 8.x
+
+          - script: dotnet restore
+            displayName: Restore
+
+          - script: dotnet build --configuration $(buildConfiguration) --no-restore
+            displayName: Build
+
+          - script: dotnet test --configuration $(buildConfiguration) --no-build --verbosity normal
+            displayName: Test
+
+          - task: Docker@2
+            displayName: Build and push image
+            inputs:
+              command: buildAndPush
+              repository: $(imageRepository)
+              dockerfile: $(dockerfilePath)
+              containerRegistry: $(containerRegistry)
+              tags: |
+                $(Build.BuildId)
+                latest
+
+  - stage: DeployStaging
+    displayName: Deploy to AKS Staging
+    dependsOn: Build
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/develop'))
+    jobs:
+      - deployment: DeployAKS
+        environment: staging
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: Kubernetes@1
+                  inputs:
+                    connectionType: Kubernetes Service Connection
+                    namespace: karasu-erp-staging
+                    command: apply
+                    arguments: -k k8s/overlays/staging
+
+  - stage: DeployProduction
+    displayName: Deploy to AKS Production
+    dependsOn: Build
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+    jobs:
+      - deployment: DeployAKS
+        environment: production
+        strategy:
+          canary:
+            increments: [25, 50, 100]
+            deploy:
+              steps:
+                - task: Kubernetes@1
+                  inputs:
+                    connectionType: Kubernetes Service Connection
+                    namespace: karasu-erp
+                    command: apply
+                    arguments: -k k8s/overlays/production

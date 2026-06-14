@@ -700,3 +700,81 @@ public class InboxMessageConfiguration : IEntityTypeConfiguration<InboxMessage>
         builder.HasIndex(i => i.MessageId).IsUnique();
     }
 }
+
+public class DailySalesSummaryConfiguration : IEntityTypeConfiguration<DailySalesSummary>
+{
+    public void Configure(EntityTypeBuilder<DailySalesSummary> builder)
+    {
+        builder.ToTable("DailySalesSummaries");
+        builder.HasKey(s => s.Id);
+        builder.Property(s => s.TotalSales).HasPrecision(18, 4);
+        builder.HasIndex(s => new { s.TenantId, s.Date }).IsUnique();
+    }
+}
+
+public class ProductSalesRankingConfiguration : IEntityTypeConfiguration<ProductSalesRanking>
+{
+    public void Configure(EntityTypeBuilder<ProductSalesRanking> builder)
+    {
+        builder.ToTable("ProductSalesRankings");
+        builder.HasKey(r => r.Id);
+        builder.Property(r => r.Period).HasMaxLength(20).IsRequired();
+        builder.Property(r => r.QuantitySold).HasPrecision(18, 4);
+        builder.Property(r => r.Revenue).HasPrecision(18, 4);
+        builder.HasIndex(r => new { r.TenantId, r.ProductVariantId, r.Period }).IsUnique();
+        builder.HasOne(r => r.ProductVariant).WithMany().HasForeignKey(r => r.ProductVariantId);
+    }
+}
+
+public class BranchPerformanceSnapshotConfiguration : IEntityTypeConfiguration<BranchPerformanceSnapshot>
+{
+    public void Configure(EntityTypeBuilder<BranchPerformanceSnapshot> builder)
+    {
+        builder.ToTable("BranchPerformanceSnapshots");
+        builder.HasKey(s => s.Id);
+        builder.Property(s => s.Period).HasMaxLength(20).IsRequired();
+        builder.Property(s => s.TotalSales).HasPrecision(18, 4);
+        builder.HasIndex(s => new { s.TenantId, s.BranchId, s.Period }).IsUnique();
+        builder.HasOne(s => s.Branch).WithMany().HasForeignKey(s => s.BranchId);
+    }
+}
+
+public class StockAlertViewConfiguration : IEntityTypeConfiguration<StockAlertView>
+{
+    public void Configure(EntityTypeBuilder<StockAlertView> builder)
+    {
+        builder.ToTable("StockAlertViews");
+        builder.HasKey(a => a.Id);
+        builder.Property(a => a.Quantity).HasPrecision(18, 4);
+        builder.Property(a => a.MinStock).HasPrecision(18, 4);
+        builder.HasIndex(a => new { a.TenantId, a.WarehouseId, a.ProductVariantId, a.IsResolved });
+        builder.HasOne(a => a.Warehouse).WithMany().HasForeignKey(a => a.WarehouseId);
+        builder.HasOne(a => a.ProductVariant).WithMany().HasForeignKey(a => a.ProductVariantId);
+    }
+}
+
+public class CustomerAttachmentConfiguration : IEntityTypeConfiguration<CustomerAttachment>
+{
+    public void Configure(EntityTypeBuilder<CustomerAttachment> builder)
+    {
+        builder.ToTable("CustomerAttachments");
+        builder.HasKey(a => a.Id);
+        builder.Property(a => a.FileName).HasMaxLength(255).IsRequired();
+        builder.Property(a => a.ContentType).HasMaxLength(100).IsRequired();
+        builder.Property(a => a.StoragePath).HasMaxLength(500).IsRequired();
+        builder.HasIndex(a => new { a.TenantId, a.CustomerId });
+        builder.HasOne(a => a.Customer).WithMany().HasForeignKey(a => a.CustomerId);
+    }
+}
+
+public class PasswordResetTokenConfiguration : IEntityTypeConfiguration<PasswordResetToken>
+{
+    public void Configure(EntityTypeBuilder<PasswordResetToken> builder)
+    {
+        builder.ToTable("PasswordResetTokens");
+        builder.HasKey(t => t.Id);
+        builder.Property(t => t.Token).HasMaxLength(100).IsRequired();
+        builder.HasIndex(t => new { t.UserId, t.Token });
+        builder.HasOne(t => t.User).WithMany().HasForeignKey(t => t.UserId).OnDelete(DeleteBehavior.Cascade);
+    }
+}

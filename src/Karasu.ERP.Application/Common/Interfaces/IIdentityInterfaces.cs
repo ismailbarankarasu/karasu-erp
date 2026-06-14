@@ -32,7 +32,58 @@ public interface IIdentityService
 
     Task<AuthUserDto?> GetUserByIdAsync(Guid userId, CancellationToken ct);
     Task<IList<string>> GetUserPermissionsAsync(Guid userId, CancellationToken ct);
+
+    Task<(bool Success, string? Error, string? ResetToken)> ForgotPasswordAsync(string email, CancellationToken ct);
+    Task<(bool Success, string? Error)> ResetPasswordAsync(string email, string token, string newPassword, CancellationToken ct);
+    Task<(bool Success, AuthUserDto? User, string? Error)> UpdateProfileAsync(
+        Guid userId, string fullName, string? email, CancellationToken ct);
+    Task<(bool Success, string? Error)> ChangePasswordAsync(
+        Guid userId, string currentPassword, string newPassword, CancellationToken ct);
 }
+
+public interface IUserManagementService
+{
+    Task<PaginatedUsersResult> GetUsersAsync(Guid tenantId, int page, int pageSize, string? search, CancellationToken ct);
+    Task<UserDetailDto?> GetUserAsync(Guid tenantId, Guid userId, CancellationToken ct);
+    Task<(bool Success, Guid? UserId, string? Error)> CreateUserAsync(CreateTenantUserRequest request, CancellationToken ct);
+    Task<(bool Success, string? Error)> UpdateUserAsync(UpdateTenantUserRequest request, CancellationToken ct);
+    Task<(bool Success, string? Error)> DeactivateUserAsync(Guid tenantId, Guid userId, Guid currentUserId, CancellationToken ct);
+}
+
+public record PaginatedUsersResult(IReadOnlyList<UserListItemDto> Items, int TotalCount, int Page, int PageSize);
+
+public record UserListItemDto(
+    Guid Id,
+    string Email,
+    string FullName,
+    bool IsActive,
+    IReadOnlyList<string> Roles,
+    DateTime CreatedAt,
+    DateTime? LastLoginAt);
+
+public record UserDetailDto(
+    Guid Id,
+    string Email,
+    string FullName,
+    bool IsActive,
+    IReadOnlyList<string> Roles,
+    IReadOnlyList<Guid> RoleIds,
+    DateTime CreatedAt,
+    DateTime? LastLoginAt);
+
+public record CreateTenantUserRequest(
+    Guid TenantId,
+    string Email,
+    string Password,
+    string FullName,
+    IReadOnlyList<Guid> RoleIds);
+
+public record UpdateTenantUserRequest(
+    Guid TenantId,
+    Guid UserId,
+    string FullName,
+    bool IsActive,
+    IReadOnlyList<Guid> RoleIds);
 
 public interface IRefreshTokenRepository
 {

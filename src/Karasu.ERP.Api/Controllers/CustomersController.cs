@@ -4,8 +4,11 @@ using Karasu.ERP.Application.Features.Customers.Commands.AddCustomerNote;
 using Karasu.ERP.Application.Features.Customers.Commands.CreateCustomer;
 using Karasu.ERP.Application.Features.Customers.Commands.DeleteCustomer;
 using Karasu.ERP.Application.Features.Customers.Commands.UpdateCustomer;
+using Karasu.ERP.Application.Features.Customers.Commands.UploadCustomerAttachment;
+using Karasu.ERP.Application.Features.Customers.Queries.GetCustomerAttachments;
 using Karasu.ERP.Application.Features.Customers.Queries.GetCustomerById;
 using Karasu.ERP.Application.Features.Customers.Queries.GetCustomerNotes;
+using Karasu.ERP.Application.Features.Customers.Queries.GetCustomerOrders;
 using Karasu.ERP.Application.Features.Customers.Queries.GetCustomerPaymentHistory;
 using Karasu.ERP.Application.Features.Customers.Queries.GetCustomers;
 using Karasu.ERP.Domain.Enums;
@@ -115,6 +118,47 @@ public class CustomersController : ControllerBase
         var result = await _mediator.Send(new GetCustomerPaymentHistoryQuery(id), ct);
         if (!result.IsSuccess) return NotFound(WrapError(result.Error!, result.ErrorCode));
         return Ok(Wrap(result.Data));
+    }
+
+    [HttpGet("customers/{id:guid}/orders")]
+    [Authorize(Policy = Policies.CustomerView)]
+    public async Task<IActionResult> GetCustomerOrders(
+        Guid id,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        CancellationToken ct = default)
+    {
+        var result = await _mediator.Send(new GetCustomerOrdersQuery(id, page, pageSize), ct);
+        if (!result.IsSuccess) return NotFound(WrapError(result.Error!, result.ErrorCode));
+        return Ok(Wrap(result.Data));
+    }
+
+    [HttpGet("customers/{id:guid}/attachments")]
+    [Authorize(Policy = Policies.CustomerView)]
+    public async Task<IActionResult> GetCustomerAttachments(Guid id, CancellationToken ct)
+    {
+        var result = await _mediator.Send(new GetCustomerAttachmentsQuery(id), ct);
+        if (!result.IsSuccess) return NotFound(WrapError(result.Error!, result.ErrorCode));
+        return Ok(Wrap(result.Data));
+    }
+
+    [HttpPost("customers/{id:guid}/attachments")]
+    [Authorize(Policy = Policies.CustomerUpdate)]
+    public async Task<IActionResult> UploadCustomerAttachment(Guid id, IFormFile file, CancellationToken ct)
+    {
+        if (file.Length == 0)
+            return BadRequest(WrapError("Dosya boş.", "EMPTY_FILE"));
+
+        await using var stream = file.OpenReadStream();
+        var result = await _mediator.Send(new UploadCustomerAttachmentCommand(
+            id,
+            stream,
+            file.FileName,
+            file.ContentType,
+            file.Length), ct);
+
+        if (!result.IsSuccess) return BadRequest(WrapError(result.Error!, result.ErrorCode));
+        return Ok(Wrap(new { id = result.Data }));
     }
 
     private static object Wrap<T>(T data) => new { success = true, data, errors = (object?)null };

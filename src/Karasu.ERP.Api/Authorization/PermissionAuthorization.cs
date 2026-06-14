@@ -103,4 +103,14 @@ public static class Policies
     public const string EInvoiceView = "EInvoice.View";
     public const string EInvoiceConfigure = "EInvoice.Configure";
     public const string EInvoiceSubmit = "EInvoice.Submit";
+
+    public const string BranchView = "Branch.View";
+    public const string BranchCreate = "Branch.Create";
+    public const string BranchUpdate = "Branch.Update";
+    public const string BranchDelete = "Branch.Delete";
+
+    public const string UserView = "User.View";
+    public const string UserCreate = "User.Create";
+    public const string UserUpdate = "User.Update";
+    public const string UserDelete = "User.Delete";
 }

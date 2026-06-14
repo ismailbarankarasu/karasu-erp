@@ -1,7 +1,11 @@
+using Karasu.ERP.Application.Features.Auth.Commands.ChangePassword;
+using Karasu.ERP.Application.Features.Auth.Commands.ForgotPassword;
 using Karasu.ERP.Application.Features.Auth.Commands.Login;
 using Karasu.ERP.Application.Features.Auth.Commands.Logout;
 using Karasu.ERP.Application.Features.Auth.Commands.RefreshToken;
 using Karasu.ERP.Application.Features.Auth.Commands.Register;
+using Karasu.ERP.Application.Features.Auth.Commands.ResetPassword;
+using Karasu.ERP.Application.Features.Auth.Commands.UpdateProfile;
 using Karasu.ERP.Application.Features.Auth.Queries.GetCurrentUser;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -60,11 +64,47 @@ public class AuthController : ControllerBase
         return result.IsSuccess ? Ok(Wrap(result.Data)) : Unauthorized(WrapError(result.Error!, result.ErrorCode));
     }
 
+    [HttpPut("me")]
+    [Authorize]
+    public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequest request, CancellationToken ct)
+    {
+        var result = await _mediator.Send(new UpdateProfileCommand(request.FullName, request.Email), ct);
+        return result.IsSuccess ? Ok(Wrap(result.Data)) : BadRequest(WrapError(result.Error!, result.ErrorCode));
+    }
+
+    [HttpPut("change-password")]
+    [Authorize]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request, CancellationToken ct)
+    {
+        var result = await _mediator.Send(new ChangePasswordCommand(request.CurrentPassword, request.NewPassword), ct);
+        return result.IsSuccess ? Ok(Wrap(new { message = "Şifre güncellendi." })) : BadRequest(WrapError(result.Error!, result.ErrorCode));
+    }
+
+    [HttpPost("forgot-password")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request, CancellationToken ct)
+    {
+        var result = await _mediator.Send(new ForgotPasswordCommand(request.Email), ct);
+        return result.IsSuccess ? Ok(Wrap(result.Data)) : BadRequest(WrapError(result.Error!, result.ErrorCode));
+    }
+
+    [HttpPost("reset-password")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordCommand command, CancellationToken ct)
+    {
+        var result = await _mediator.Send(command, ct);
+        return result.IsSuccess ? Ok(Wrap(new { message = "Şifre sıfırlandı." })) : BadRequest(WrapError(result.Error!, result.ErrorCode));
+    }
+
     private static object Wrap<T>(T data) => new { success = true, data, errors = (object?)null };
 
     private static object WrapError(string message, string? code) =>
         new { success = false, data = (object?)null, errors = new[] { new { code = code ?? "ERROR", message } } };
 }
+
+public record UpdateProfileRequest(string FullName, string? Email);
+public record ChangePasswordRequest(string CurrentPassword, string NewPassword);
+public record ForgotPasswordRequest(string Email);
 
 [ApiController]
 [Route("api/v1/health")]

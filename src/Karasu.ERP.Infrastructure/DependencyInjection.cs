@@ -23,6 +23,9 @@ public static class DependencyInjection
         services.AddScoped<IReportExportService, ReportExportService>();
         services.AddScoped<IOutboxService, OutboxService>();
         services.AddScoped<INotificationService, NotificationService>();
+        services.AddScoped<IBarcodeService, BarcodeService>();
+        services.AddScoped<IProductExcelService, ProductExcelService>();
+        services.AddScoped<IFileStorageService, LocalFileStorageService>();
         services.AddScoped<IEInvoiceProvider, StubEInvoiceProvider>();
         services.AddScoped<IEInvoiceProviderResolver, EInvoiceProviderResolver>();
         services.AddSignalR();

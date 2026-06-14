@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: karasu-api
+  namespace: karasu-erp
   labels:
     app: karasu-api
 spec:
@@ -19,9 +20,10 @@ spec:
           image: ghcr.io/karasu/erp-api:latest
           ports:
             - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: karasu-api-config
           env:
-            - name: ASPNETCORE_ENVIRONMENT
-              value: Production
             - name: ConnectionStrings__DefaultConnection
               valueFrom:
                 secretKeyRef:
@@ -32,6 +34,11 @@ spec:
                 secretKeyRef:
                   name: karasu-secrets
                   key: redis-connection
+            - name: Jwt__Secret
+              valueFrom:
+                secretKeyRef:
+                  name: karasu-secrets
+                  key: jwt-secret
           resources:
             requests:
               cpu: 500m
@@ -56,6 +63,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: karasu-api
+  namespace: karasu-erp
 spec:
   selector:
     app: karasu-api
@@ -68,6 +76,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: karasu-api-hpa
+  namespace: karasu-erp
 spec:
   scaleTargetRef:
     apiVersion: apps/v1

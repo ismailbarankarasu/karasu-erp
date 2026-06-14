@@ -174,6 +174,103 @@ public class IdentityService : IIdentityService
         return new AuthUserDto(user.Id, user.TenantId, user.Email!, user.FullName, roles, permissions);
     }
 
+    public async Task<(bool Success, string? Error, string? ResetToken)> ForgotPasswordAsync(
+        string email, CancellationToken ct)
+    {
+        var user = await _userManager.FindByEmailAsync(email);
+        if (user is null || !user.IsActive)
+            return (true, null, null);
+
+        var token = Guid.NewGuid().ToString("N");
+        var resetToken = new PasswordResetToken
+        {
+            Id = Guid.NewGuid(),
+            UserId = user.Id,
+            Token = token,
+            ExpiresAt = DateTime.UtcNow.AddHours(1),
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _context.Set<PasswordResetToken>().Add(resetToken);
+        await _context.SaveChangesAsync(ct);
+
+        return (true, null, token);
+    }
+
+    public async Task<(bool Success, string? Error)> ResetPasswordAsync(
+        string email, string token, string newPassword, CancellationToken ct)
+    {
+        var user = await _userManager.FindByEmailAsync(email);
+        if (user is null || !user.IsActive)
+            return (false, "Geçersiz sıfırlama isteği.");
+
+        var resetToken = await _context.Set<PasswordResetToken>()
+            .FirstOrDefaultAsync(t =>
+                t.UserId == user.Id &&
+                t.Token == token &&
+                !t.IsUsed &&
+                t.ExpiresAt > DateTime.UtcNow,
+                ct);
+
+        if (resetToken is null)
+            return (false, "Geçersiz veya süresi dolmuş token.");
+
+        var removeResult = await _userManager.RemovePasswordAsync(user);
+        if (!removeResult.Succeeded)
+            return (false, string.Join(", ", removeResult.Errors.Select(e => e.Description)));
+
+        var addResult = await _userManager.AddPasswordAsync(user, newPassword);
+        if (!addResult.Succeeded)
+            return (false, string.Join(", ", addResult.Errors.Select(e => e.Description)));
+
+        resetToken.IsUsed = true;
+        await _context.SaveChangesAsync(ct);
+        return (true, null);
+    }
+
+    public async Task<(bool Success, AuthUserDto? User, string? Error)> UpdateProfileAsync(
+        Guid userId, string fullName, string? email, CancellationToken ct)
+    {
+        var user = await _userManager.FindByIdAsync(userId.ToString());
+        if (user is null || !user.IsActive)
+            return (false, null, "Kullanıcı bulunamadı.");
+
+        user.FullName = fullName.Trim();
+
+        if (!string.IsNullOrWhiteSpace(email) &&
+            !string.Equals(user.Email, email, StringComparison.OrdinalIgnoreCase))
+        {
+            var existing = await _userManager.FindByEmailAsync(email);
+            if (existing is not null && existing.Id != user.Id)
+                return (false, null, "Bu e-posta zaten kullanılıyor.");
+
+            user.Email = email.Trim();
+            user.UserName = email.Trim();
+            user.NormalizedEmail = email.Trim().ToUpperInvariant();
+            user.NormalizedUserName = email.Trim().ToUpperInvariant();
+        }
+
+        var result = await _userManager.UpdateAsync(user);
+        if (!result.Succeeded)
+            return (false, null, string.Join(", ", result.Errors.Select(e => e.Description)));
+
+        return (true, await BuildAuthUserDto(user, ct), null);
+    }
+
+    public async Task<(bool Success, string? Error)> ChangePasswordAsync(
+        Guid userId, string currentPassword, string newPassword, CancellationToken ct)
+    {
+        var user = await _userManager.FindByIdAsync(userId.ToString());
+        if (user is null || !user.IsActive)
+            return (false, "Kullanıcı bulunamadı.");
+
+        var result = await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
+        if (!result.Succeeded)
+            return (false, string.Join(", ", result.Errors.Select(e => e.Description)));
+
+        return (true, null);
+    }
+
     private async Task<IList<string>> GetPermissionsForRoles(IList<Guid> roleIds, CancellationToken ct)
     {
         if (roleIds.Count == 0)
