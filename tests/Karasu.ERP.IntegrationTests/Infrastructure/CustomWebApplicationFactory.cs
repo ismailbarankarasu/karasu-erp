@@ -74,7 +74,20 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
             new Permission { Id = Guid.NewGuid(), Module = "Finance", Entity = "Account", Action = "Create", Description = "Create finance" },
             new Permission { Id = Guid.NewGuid(), Module = "Dashboard", Entity = "Summary", Action = "View", Description = "View dashboard" },
             new Permission { Id = Guid.NewGuid(), Module = "Report", Entity = "Sales", Action = "View", Description = "View reports" },
-            new Permission { Id = Guid.NewGuid(), Module = "Report", Entity = "Sales", Action = "Export", Description = "Export reports" });
+            new Permission { Id = Guid.NewGuid(), Module = "Report", Entity = "Sales", Action = "Export", Description = "Export reports" },
+            new Permission { Id = Guid.NewGuid(), Module = "Hr", Entity = "Employee", Action = "View", Description = "View HR" },
+            new Permission { Id = Guid.NewGuid(), Module = "Hr", Entity = "Employee", Action = "Create", Description = "Create HR" },
+            new Permission { Id = Guid.NewGuid(), Module = "Hr", Entity = "Employee", Action = "Update", Description = "Update HR" },
+            new Permission { Id = Guid.NewGuid(), Module = "Hr", Entity = "Leave", Action = "Create", Description = "Create leave" },
+            new Permission { Id = Guid.NewGuid(), Module = "Hr", Entity = "Leave", Action = "Approve", Description = "Approve leave" },
+            new Permission { Id = Guid.NewGuid(), Module = "Hr", Entity = "Shift", Action = "Create", Description = "Create shift" },
+            new Permission { Id = Guid.NewGuid(), Module = "Hr", Entity = "Payroll", Action = "Create", Description = "Create payroll" },
+            new Permission { Id = Guid.NewGuid(), Module = "Supplier", Entity = "Supplier", Action = "View", Description = "View suppliers" },
+            new Permission { Id = Guid.NewGuid(), Module = "Supplier", Entity = "Supplier", Action = "Create", Description = "Create suppliers" },
+            new Permission { Id = Guid.NewGuid(), Module = "Supplier", Entity = "Supplier", Action = "Update", Description = "Update suppliers" },
+            new Permission { Id = Guid.NewGuid(), Module = "PurchaseOrder", Entity = "PurchaseOrder", Action = "View", Description = "View PO" },
+            new Permission { Id = Guid.NewGuid(), Module = "PurchaseOrder", Entity = "PurchaseOrder", Action = "Create", Description = "Create PO" },
+            new Permission { Id = Guid.NewGuid(), Module = "PurchaseOrder", Entity = "PurchaseOrder", Action = "Receive", Description = "Receive PO" });
         db.SaveChanges();
     }
 }

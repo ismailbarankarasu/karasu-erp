@@ -42,6 +42,13 @@ public interface IApplicationDbContext
     DbSet<Receivable> Receivables { get; }
     DbSet<Payable> Payables { get; }
     DbSet<FinancePayment> FinancePayments { get; }
+    DbSet<Employee> Employees { get; }
+    DbSet<LeaveRequest> LeaveRequests { get; }
+    DbSet<Shift> Shifts { get; }
+    DbSet<Payroll> Payrolls { get; }
+    DbSet<Supplier> Suppliers { get; }
+    DbSet<PurchaseOrder> PurchaseOrders { get; }
+    DbSet<PurchaseOrderLine> PurchaseOrderLines { get; }
     DbSet<AuditLog> AuditLogs { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);

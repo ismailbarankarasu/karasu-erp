@@ -58,6 +58,13 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
     public DbSet<Receivable> Receivables => Set<Receivable>();
     public DbSet<Payable> Payables => Set<Payable>();
     public DbSet<FinancePayment> FinancePayments => Set<FinancePayment>();
+    public DbSet<Employee> Employees => Set<Employee>();
+    public DbSet<LeaveRequest> LeaveRequests => Set<LeaveRequest>();
+    public DbSet<Shift> Shifts => Set<Shift>();
+    public DbSet<Payroll> Payrolls => Set<Payroll>();
+    public DbSet<Supplier> Suppliers => Set<Supplier>();
+    public DbSet<PurchaseOrder> PurchaseOrders => Set<PurchaseOrder>();
+    public DbSet<PurchaseOrderLine> PurchaseOrderLines => Set<PurchaseOrderLine>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<Permission> Permissions => Set<Permission>();

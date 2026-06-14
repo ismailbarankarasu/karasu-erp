@@ -86,4 +86,17 @@ public static class Policies
     public const string ReportProductView = "Report.Product";
     public const string ReportStockView = "Report.Stock";
     public const string ReportExport = "Report.Export";
+
+    public const string HrView = "Hr.View";
+    public const string HrCreate = "Hr.Create";
+    public const string HrUpdate = "Hr.Update";
+    public const string HrApprove = "Hr.Approve";
+
+    public const string SupplierView = "Supplier.View";
+    public const string SupplierCreate = "Supplier.Create";
+    public const string SupplierUpdate = "Supplier.Update";
+
+    public const string PurchaseOrderView = "PurchaseOrder.View";
+    public const string PurchaseOrderCreate = "PurchaseOrder.Create";
+    public const string PurchaseOrderReceive = "PurchaseOrder.Receive";
 }

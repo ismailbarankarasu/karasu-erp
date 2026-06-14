@@ -66,5 +66,18 @@ public static class AuthorizationPolicyRegistration
         Add(Policies.ReportProductView, "Report.Sales.View");
         Add(Policies.ReportStockView, "Report.Sales.View");
         Add(Policies.ReportExport, "Report.Sales.Export");
+
+        Add(Policies.HrView, "Hr.Employee.View");
+        Add(Policies.HrCreate, "Hr.Employee.Create");
+        Add(Policies.HrUpdate, "Hr.Employee.Update");
+        Add(Policies.HrApprove, "Hr.Leave.Approve");
+
+        Add(Policies.SupplierView, "Supplier.Supplier.View");
+        Add(Policies.SupplierCreate, "Supplier.Supplier.Create");
+        Add(Policies.SupplierUpdate, "Supplier.Supplier.Update");
+
+        Add(Policies.PurchaseOrderView, "PurchaseOrder.PurchaseOrder.View");
+        Add(Policies.PurchaseOrderCreate, "PurchaseOrder.PurchaseOrder.Create");
+        Add(Policies.PurchaseOrderReceive, "PurchaseOrder.PurchaseOrder.Receive");
     }
 }

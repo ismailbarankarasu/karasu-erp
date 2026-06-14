@@ -20,3 +20,8 @@ public enum BankTransactionType { In, Out }
 public enum ReceivableStatus { Open, PartiallyPaid, Paid, Overdue, Cancelled }
 public enum PayableStatus { Open, PartiallyPaid, Paid, Overdue, Cancelled }
 public enum FinancePaymentDirection { Collection, Disbursement }
+public enum EmployeeStatus { Active, Inactive, Terminated }
+public enum LeaveType { Annual, Sick, Unpaid, Other }
+public enum LeaveRequestStatus { Pending, Approved, Rejected, Cancelled }
+public enum PayrollStatus { Draft, Generated, Paid }
+public enum PurchaseOrderStatus { Draft, Sent, PartiallyReceived, Received, Cancelled }

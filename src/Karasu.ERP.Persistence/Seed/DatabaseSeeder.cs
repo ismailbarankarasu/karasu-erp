@@ -59,6 +59,17 @@ public static class DatabaseSeeder
             Perm("Finance", "Account", "View"), Perm("Finance", "Account", "Create"),
             // Reports
             Perm("Report", "Sales", "View"), Perm("Report", "Sales", "Export"),
+            // HR
+            Perm("Hr", "Employee", "View"), Perm("Hr", "Employee", "Create"),
+            Perm("Hr", "Employee", "Update"), Perm("Hr", "Leave", "Create"),
+            Perm("Hr", "Leave", "Approve"), Perm("Hr", "Shift", "Create"),
+            Perm("Hr", "Payroll", "Create"),
+            // Supplier & Procurement
+            Perm("Supplier", "Supplier", "View"), Perm("Supplier", "Supplier", "Create"),
+            Perm("Supplier", "Supplier", "Update"),
+            Perm("PurchaseOrder", "PurchaseOrder", "View"),
+            Perm("PurchaseOrder", "PurchaseOrder", "Create"),
+            Perm("PurchaseOrder", "PurchaseOrder", "Receive"),
             // Audit
             Perm("Audit", "Log", "View"),
             // Branch
