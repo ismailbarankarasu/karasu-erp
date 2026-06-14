@@ -77,4 +77,13 @@ public static class Policies
 
     public const string FinanceView = "Finance.View";
     public const string FinanceCreate = "Finance.Create";
+
+    public const string DashboardView = "Dashboard.View";
+
+    public const string ReportSalesView = "Report.Sales";
+    public const string ReportFinanceView = "Report.Finance";
+    public const string ReportCustomerView = "Report.Customer";
+    public const string ReportProductView = "Report.Product";
+    public const string ReportStockView = "Report.Stock";
+    public const string ReportExport = "Report.Export";
 }

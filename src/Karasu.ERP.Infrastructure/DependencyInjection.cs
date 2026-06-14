@@ -19,6 +19,7 @@ public static class DependencyInjection
         services.AddScoped<ITenantNotificationPublisher, TenantNotificationPublisher>();
         services.AddScoped<ICacheService, RedisCacheService>();
         services.AddScoped<IReceiptPdfService, ReceiptPdfService>();
+        services.AddScoped<IReportExportService, ReportExportService>();
 
         var redisConnection = configuration.GetConnectionString("Redis");
         if (!string.IsNullOrEmpty(redisConnection))

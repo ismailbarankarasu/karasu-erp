@@ -57,5 +57,14 @@ public static class AuthorizationPolicyRegistration
 
         Add(Policies.FinanceView, "Finance.Account.View");
         Add(Policies.FinanceCreate, "Finance.Account.Create");
+
+        Add(Policies.DashboardView, "Dashboard.Summary.View");
+
+        Add(Policies.ReportSalesView, "Report.Sales.View");
+        Add(Policies.ReportFinanceView, "Report.Sales.View");
+        Add(Policies.ReportCustomerView, "Report.Sales.View");
+        Add(Policies.ReportProductView, "Report.Sales.View");
+        Add(Policies.ReportStockView, "Report.Sales.View");
+        Add(Policies.ReportExport, "Report.Sales.Export");
     }
 }
