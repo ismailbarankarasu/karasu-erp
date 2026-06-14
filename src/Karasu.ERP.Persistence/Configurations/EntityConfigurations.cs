@@ -618,3 +618,85 @@ public class PurchaseOrderLineConfiguration : IEntityTypeConfiguration<PurchaseO
         builder.HasOne(l => l.ProductVariant).WithMany().HasForeignKey(l => l.ProductVariantId).OnDelete(DeleteBehavior.NoAction);
     }
 }
+
+public class EInvoiceProfileConfiguration : IEntityTypeConfiguration<EInvoiceProfile>
+{
+    public void Configure(EntityTypeBuilder<EInvoiceProfile> builder)
+    {
+        builder.ToTable("EInvoiceProfiles");
+        builder.HasKey(p => p.Id);
+        builder.Property(p => p.ApiKey).HasMaxLength(500);
+        builder.Property(p => p.ApiSecret).HasMaxLength(500);
+        builder.Property(p => p.CertificatePath).HasMaxLength(500);
+        builder.Property(p => p.TaxNumber).HasMaxLength(50);
+        builder.Property(p => p.CompanyTitle).HasMaxLength(200);
+        builder.Property(p => p.SettingsJson).HasColumnType("nvarchar(max)");
+        builder.HasIndex(p => p.TenantId).IsUnique();
+    }
+}
+
+public class EInvoiceSubmissionConfiguration : IEntityTypeConfiguration<EInvoiceSubmission>
+{
+    public void Configure(EntityTypeBuilder<EInvoiceSubmission> builder)
+    {
+        builder.ToTable("EInvoiceSubmissions");
+        builder.HasKey(s => s.Id);
+        builder.Property(s => s.GibUuid).HasMaxLength(100);
+        builder.Property(s => s.ResponseJson).HasColumnType("nvarchar(max)");
+        builder.Property(s => s.ErrorMessage).HasMaxLength(1000);
+        builder.HasIndex(s => new { s.TenantId, s.Status, s.SubmittedAt });
+        builder.HasOne(s => s.Invoice).WithMany().HasForeignKey(s => s.InvoiceId).OnDelete(DeleteBehavior.NoAction);
+        builder.HasOne(s => s.Order).WithMany().HasForeignKey(s => s.OrderId).OnDelete(DeleteBehavior.NoAction);
+    }
+}
+
+public class EDispatchNoteConfiguration : IEntityTypeConfiguration<EDispatchNote>
+{
+    public void Configure(EntityTypeBuilder<EDispatchNote> builder)
+    {
+        builder.ToTable("EDispatchNotes");
+        builder.HasKey(d => d.Id);
+        builder.Property(d => d.DispatchNumber).HasMaxLength(50).IsRequired();
+        builder.Property(d => d.GibUuid).HasMaxLength(100);
+        builder.Property(d => d.ResponseJson).HasColumnType("nvarchar(max)");
+        builder.HasIndex(d => new { d.TenantId, d.DispatchNumber }).IsUnique();
+        builder.HasOne(d => d.Order).WithMany().HasForeignKey(d => d.OrderId).OnDelete(DeleteBehavior.NoAction);
+    }
+}
+
+public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
+{
+    public void Configure(EntityTypeBuilder<Notification> builder)
+    {
+        builder.ToTable("Notifications");
+        builder.HasKey(n => n.Id);
+        builder.Property(n => n.Title).HasMaxLength(200).IsRequired();
+        builder.Property(n => n.Message).HasMaxLength(2000).IsRequired();
+        builder.Property(n => n.PayloadJson).HasColumnType("nvarchar(max)");
+        builder.HasIndex(n => new { n.TenantId, n.UserId, n.IsRead, n.CreatedAt });
+    }
+}
+
+public class OutboxMessageConfiguration : IEntityTypeConfiguration<OutboxMessage>
+{
+    public void Configure(EntityTypeBuilder<OutboxMessage> builder)
+    {
+        builder.ToTable("OutboxMessages");
+        builder.HasKey(o => o.Id);
+        builder.Property(o => o.EventType).HasMaxLength(100).IsRequired();
+        builder.Property(o => o.Payload).HasColumnType("nvarchar(max)").IsRequired();
+        builder.Property(o => o.ErrorMessage).HasMaxLength(2000);
+        builder.HasIndex(o => new { o.Status, o.CreatedAt });
+    }
+}
+
+public class InboxMessageConfiguration : IEntityTypeConfiguration<InboxMessage>
+{
+    public void Configure(EntityTypeBuilder<InboxMessage> builder)
+    {
+        builder.ToTable("InboxMessages");
+        builder.HasKey(i => i.Id);
+        builder.Property(i => i.MessageId).HasMaxLength(100).IsRequired();
+        builder.HasIndex(i => i.MessageId).IsUnique();
+    }
+}

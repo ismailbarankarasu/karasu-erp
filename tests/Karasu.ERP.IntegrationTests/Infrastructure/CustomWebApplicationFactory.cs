@@ -87,7 +87,10 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
             new Permission { Id = Guid.NewGuid(), Module = "Supplier", Entity = "Supplier", Action = "Update", Description = "Update suppliers" },
             new Permission { Id = Guid.NewGuid(), Module = "PurchaseOrder", Entity = "PurchaseOrder", Action = "View", Description = "View PO" },
             new Permission { Id = Guid.NewGuid(), Module = "PurchaseOrder", Entity = "PurchaseOrder", Action = "Create", Description = "Create PO" },
-            new Permission { Id = Guid.NewGuid(), Module = "PurchaseOrder", Entity = "PurchaseOrder", Action = "Receive", Description = "Receive PO" });
+            new Permission { Id = Guid.NewGuid(), Module = "PurchaseOrder", Entity = "PurchaseOrder", Action = "Receive", Description = "Receive PO" },
+            new Permission { Id = Guid.NewGuid(), Module = "EInvoice", Entity = "Profile", Action = "View", Description = "View e-invoice" },
+            new Permission { Id = Guid.NewGuid(), Module = "EInvoice", Entity = "Profile", Action = "Configure", Description = "Configure e-invoice" },
+            new Permission { Id = Guid.NewGuid(), Module = "EInvoice", Entity = "Submission", Action = "Submit", Description = "Submit e-invoice" });
         db.SaveChanges();
     }
 }

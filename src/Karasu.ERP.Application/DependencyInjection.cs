@@ -1,6 +1,7 @@
 using System.Reflection;
 using FluentValidation;
 using Karasu.ERP.Application.Common.Behaviors;
+using Karasu.ERP.Application.Features.EInvoice.Common;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -23,6 +24,7 @@ public static class DependencyInjection
         });
 
         services.AddValidatorsFromAssembly(assembly);
+        services.AddScoped<EInvoiceSubmissionHelper>();
 
         return services;
     }

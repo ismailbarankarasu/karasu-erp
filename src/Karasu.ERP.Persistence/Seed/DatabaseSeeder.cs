@@ -70,6 +70,9 @@ public static class DatabaseSeeder
             Perm("PurchaseOrder", "PurchaseOrder", "View"),
             Perm("PurchaseOrder", "PurchaseOrder", "Create"),
             Perm("PurchaseOrder", "PurchaseOrder", "Receive"),
+            // E-Invoice
+            Perm("EInvoice", "Profile", "View"), Perm("EInvoice", "Profile", "Configure"),
+            Perm("EInvoice", "Submission", "Submit"),
             // Audit
             Perm("Audit", "Log", "View"),
             // Branch

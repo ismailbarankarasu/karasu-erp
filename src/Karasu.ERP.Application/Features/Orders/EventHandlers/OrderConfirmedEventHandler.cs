@@ -5,26 +5,23 @@ using MediatR;
 namespace Karasu.ERP.Application.Features.Orders.EventHandlers;
 
 /// <summary>
-/// Sipariş onaylandığında: stok rezervasyonu, dashboard cache invalidation, SignalR bildirimi.
+/// Sipariş onaylandığında: dashboard cache invalidation, outbox mesajı.
 /// </summary>
 public class OrderConfirmedEventHandler : INotificationHandler<OrderConfirmedEvent>
 {
     private readonly ICacheService _cacheService;
-    private readonly ITenantNotificationPublisher _notificationPublisher;
+    private readonly IOutboxService _outboxService;
 
     public OrderConfirmedEventHandler(
         ICacheService cacheService,
-        ITenantNotificationPublisher notificationPublisher)
+        IOutboxService outboxService)
     {
         _cacheService = cacheService;
-        _notificationPublisher = notificationPublisher;
+        _outboxService = outboxService;
     }
 
     public async Task Handle(OrderConfirmedEvent notification, CancellationToken cancellationToken)
     {
-        // Stok düşümü ConfirmOrderCommandHandler içinde transaction ile yapılır.
-        // TODO: Outbox mesajı — raporlama projection güncellemesi
-
         await _cacheService.RemoveByPatternAsync(
             $"{notification.TenantId}:dashboard:*",
             cancellationToken);
@@ -36,7 +33,7 @@ public class OrderConfirmedEventHandler : INotificationHandler<OrderConfirmedEve
                 cancellationToken);
         }
 
-        await _notificationPublisher.PublishToTenantAsync(
+        await _outboxService.EnqueueAsync(
             notification.TenantId,
             "OrderConfirmed",
             new

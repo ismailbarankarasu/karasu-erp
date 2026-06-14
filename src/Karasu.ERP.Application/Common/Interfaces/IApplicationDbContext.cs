@@ -49,6 +49,12 @@ public interface IApplicationDbContext
     DbSet<Supplier> Suppliers { get; }
     DbSet<PurchaseOrder> PurchaseOrders { get; }
     DbSet<PurchaseOrderLine> PurchaseOrderLines { get; }
+    DbSet<EInvoiceProfile> EInvoiceProfiles { get; }
+    DbSet<EInvoiceSubmission> EInvoiceSubmissions { get; }
+    DbSet<EDispatchNote> EDispatchNotes { get; }
+    DbSet<Notification> Notifications { get; }
+    DbSet<OutboxMessage> OutboxMessages { get; }
+    DbSet<InboxMessage> InboxMessages { get; }
     DbSet<AuditLog> AuditLogs { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);

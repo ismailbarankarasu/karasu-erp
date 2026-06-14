@@ -99,4 +99,8 @@ public static class Policies
     public const string PurchaseOrderView = "PurchaseOrder.View";
     public const string PurchaseOrderCreate = "PurchaseOrder.Create";
     public const string PurchaseOrderReceive = "PurchaseOrder.Receive";
+
+    public const string EInvoiceView = "EInvoice.View";
+    public const string EInvoiceConfigure = "EInvoice.Configure";
+    public const string EInvoiceSubmit = "EInvoice.Submit";
 }

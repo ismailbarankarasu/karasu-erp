@@ -3,6 +3,7 @@ using Karasu.ERP.Infrastructure.Caching;
 using Karasu.ERP.Infrastructure.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace Karasu.ERP.Infrastructure;
 
@@ -20,6 +21,15 @@ public static class DependencyInjection
         services.AddScoped<ICacheService, RedisCacheService>();
         services.AddScoped<IReceiptPdfService, ReceiptPdfService>();
         services.AddScoped<IReportExportService, ReportExportService>();
+        services.AddScoped<IOutboxService, OutboxService>();
+        services.AddScoped<INotificationService, NotificationService>();
+        services.AddScoped<IEInvoiceProvider, StubEInvoiceProvider>();
+        services.AddScoped<IEInvoiceProviderResolver, EInvoiceProviderResolver>();
+        services.AddSignalR();
+
+        var environment = configuration["ASPNETCORE_ENVIRONMENT"] ?? configuration["DOTNET_ENVIRONMENT"];
+        if (!string.Equals(environment, "Testing", StringComparison.OrdinalIgnoreCase))
+            services.AddHostedService<OutboxProcessor>();
 
         var redisConnection = configuration.GetConnectionString("Redis");
         if (!string.IsNullOrEmpty(redisConnection))

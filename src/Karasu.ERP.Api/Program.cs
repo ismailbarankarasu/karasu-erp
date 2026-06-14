@@ -7,6 +7,7 @@ using Karasu.ERP.Application;
 using Karasu.ERP.Identity;
 using Karasu.ERP.Identity.Options;
 using Karasu.ERP.Infrastructure;
+using Karasu.ERP.Infrastructure.Services;
 using Karasu.ERP.Persistence;
 using Karasu.ERP.Persistence.Seed;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -48,6 +49,18 @@ builder.Services.AddAuthentication(options =>
             ValidAudience = jwtSettings.Audience,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Secret)),
             ClockSkew = TimeSpan.Zero
+        };
+
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+                var path = context.HttpContext.Request.Path;
+                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+                    context.Token = accessToken;
+                return Task.CompletedTask;
+            }
         };
     });
 
@@ -119,6 +132,7 @@ app.UseAuthentication();
 app.UseMiddleware<TenantMiddleware>();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<NotificationHub>("/hubs/notifications");
 app.MapHealthChecks("/health");
 app.MapHealthChecks("/health/live");
 app.MapHealthChecks("/health/ready");

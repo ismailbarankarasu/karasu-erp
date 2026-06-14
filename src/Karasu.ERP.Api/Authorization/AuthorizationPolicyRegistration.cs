@@ -79,5 +79,9 @@ public static class AuthorizationPolicyRegistration
         Add(Policies.PurchaseOrderView, "PurchaseOrder.PurchaseOrder.View");
         Add(Policies.PurchaseOrderCreate, "PurchaseOrder.PurchaseOrder.Create");
         Add(Policies.PurchaseOrderReceive, "PurchaseOrder.PurchaseOrder.Receive");
+
+        Add(Policies.EInvoiceView, "EInvoice.Profile.View");
+        Add(Policies.EInvoiceConfigure, "EInvoice.Profile.Configure");
+        Add(Policies.EInvoiceSubmit, "EInvoice.Submission.Submit");
     }
 }

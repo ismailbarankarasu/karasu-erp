@@ -25,3 +25,9 @@ public enum LeaveType { Annual, Sick, Unpaid, Other }
 public enum LeaveRequestStatus { Pending, Approved, Rejected, Cancelled }
 public enum PayrollStatus { Draft, Generated, Paid }
 public enum PurchaseOrderStatus { Draft, Sent, PartiallyReceived, Received, Cancelled }
+public enum EInvoiceProvider { Stub, Uyumsoft, Logo, Foriba, Izibiz }
+public enum EInvoiceSubmissionType { EInvoice, EArchive, EDispatch }
+public enum EInvoiceSubmissionStatus { Pending, Submitted, Accepted, Rejected, Failed }
+public enum EDispatchStatus { Draft, Submitted, Accepted, Rejected, Cancelled }
+public enum NotificationType { NewOrder, CriticalStock, PaymentReceived, SystemError, SystemAnnouncement, OrderConfirmed }
+public enum OutboxMessageStatus { Pending, Processing, Processed, Failed }

@@ -42,12 +42,3 @@ public class DateTimeService : IDateTimeService
 {
     public DateTime UtcNow => DateTime.UtcNow;
 }
-
-public class TenantNotificationPublisher : ITenantNotificationPublisher
-{
-    public Task PublishToTenantAsync(Guid tenantId, string eventName, object payload, CancellationToken ct)
-    {
-        // SignalR hub Sprint 11'de implement edilecek
-        return Task.CompletedTask;
-    }
-}
